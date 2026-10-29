@@ -6,6 +6,10 @@ from .input_formats import INPUT_GLOB
 
 TRANSLATIONS = {
     'en': {
+        'reset_crop': 'Reset crop',
+        'reset_crop_tip': 'Center and maximize this crop; keep its ratio. Choose Use batch ratio to remove a ratio override.',
+        'image_ratio': 'Image ratio:',
+        'use_batch_ratio': 'Use batch ratio ({ratio})',
         'window_title': 'Cropperio — {version}',
         'ratio_original': 'Original',
         'custom': 'Custom…', 'dimension': 'Dimension:', 'width': 'Width', 'height': 'Height',
@@ -59,6 +63,10 @@ TRANSLATIONS = {
         'error_unsupported_format': 'Unsupported output format: {format}',
     },
     'fr': {
+        'reset_crop': 'Réinitialiser le cadrage',
+        'reset_crop_tip': 'Recentrer et maximiser ce crop en conservant son ratio. Choisir le ratio du lot pour supprimer le ratio individuel.',
+        'image_ratio': 'Ratio image :',
+        'use_batch_ratio': 'Ratio du lot ({ratio})',
         'window_title': 'Cropperio — {version}',
         'ratio_original': 'Original',
         'custom': 'Personnalisé…', 'dimension': 'Dimension :', 'width': 'Largeur', 'height': 'Hauteur',
@@ -112,6 +120,10 @@ TRANSLATIONS = {
         'error_unsupported_format': 'Format de sortie non pris en charge : {format}',
     },
     'ja': {
+        'reset_crop': '切り抜きをリセット',
+        'reset_crop_tip': '比率を維持して中央の最大クロップに戻します。個別比率の解除は「一括設定」を選択してください。',
+        'image_ratio': '画像の比率：',
+        'use_batch_ratio': '一括設定を使用 ({ratio})',
         'custom': 'カスタム…', 'dimension': '基準：', 'width': '幅', 'height': '高さ',
         'custom_value': 'カスタムサイズ（ピクセル）', 'custom_limit': '選択した辺は 1～{maximum} px。',
         'window_title': 'Cropperio — {version}', 'ratio_original': 'オリジナル',

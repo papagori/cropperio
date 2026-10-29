@@ -17,7 +17,9 @@ from .classic_icons import classic_icon
 from .branding import TAGLINE, DESCRIPTION
 from .icons import wand_icon
 from .export import FORMATS
-from .geometry import crop_box, output_size
+from dataclasses import replace
+from .geometry import (resolve_crop, output_size, crop_adjustment, move_crop,
+                       zoom_crop, minimum_scale, ManualCrop, image_options)
 from .i18n import normalize_language, system_language, tr
 from .input_formats import load_primary_image
 from .processing import process_image
@@ -45,10 +47,11 @@ class Worker(QThread):
     progress = Signal(int, int)
     result = Signal(int, object)
 
-    def __init__(self, paths, recursive=None, existing=(), parent=None, options=ProcessingOptions()):
+    def __init__(self, paths, recursive=None, existing=(), parent=None, options=ProcessingOptions(), crops=None):
         super().__init__(parent)
         self.paths, self.recursive, self.existing = paths, recursive, existing
         self.options = options
+        self.crops = dict(crops or {})  # Immutable states, snapshot before starting.
 
     def run(self):
         if self.recursive is not None:
@@ -57,7 +60,7 @@ class Worker(QThread):
         else:
             for index, path in enumerate(self.paths):
                 self.progress.emit(index + 1, len(self.paths))
-                self.result.emit(index, process_image(path, self.options))
+                self.result.emit(index, process_image(path, self.options, self.crops.get(path)))
 
 
 class DropArea(QFrame):
@@ -127,6 +130,8 @@ class DropArea(QFrame):
 
 class PreviewCanvas(QFrame):
     """Paint an oriented thumbnail with only the cropped-away area darkened."""
+    moved = Signal(object, float, float)
+    zoomed = Signal(float)
 
     def __init__(self, language='en'):
         super().__init__()
@@ -134,13 +139,82 @@ class PreviewCanvas(QFrame):
         self.pixmap = self.source_size = self.crop = None
         self.setMinimumSize(240, 100)
         self.setObjectName('previewCanvas')
+        self.setMouseTracking(True)
+        self.drag_origin = None
 
     def set_preview(self, pixmap, source_size, crop):
+        if pixmap is not self.pixmap or source_size != self.source_size:
+            self.drag_origin = None
+            self.unsetCursor()
         self.pixmap, self.source_size, self.crop = pixmap, source_size, crop
         self.update()
 
     def clear_preview(self):
         self.set_preview(None, None, None)
+
+    def image_rect(self):
+        bounds = QRectF(self.rect().adjusted(10, 10, -10, -10))
+        scaled = self.pixmap.size()
+        scaled.scale(bounds.size().toSize(), Qt.AspectRatioMode.KeepAspectRatio)
+        rect = QRectF(0, 0, scaled.width(), scaled.height())
+        rect.moveCenter(bounds.center())
+        return rect
+
+    def crop_rect(self):
+        rect = self.image_rect()
+        sx, sy = rect.width() / self.source_size[0], rect.height() / self.source_size[1]
+        l, t, r, b = self.crop
+        return QRectF(rect.left() + l * sx, rect.top() + t * sy, (r-l)*sx, (b-t)*sy)
+
+    def update_cursor(self, position):
+        if self.source_size and self.crop_rect().contains(position):
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
+        else:
+            self.unsetCursor()
+
+    def mousePressEvent(self, event):
+        if (event.button() == Qt.MouseButton.LeftButton and self.source_size
+                and self.crop_rect().contains(event.position())):
+            self.drag_origin = event.position()
+            self.drag_box = self.crop
+            self.setCursor(Qt.CursorShape.ClosedHandCursor)
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self.drag_origin is not None and event.buttons() & Qt.MouseButton.LeftButton:
+            delta = event.position() - self.drag_origin
+            rect = self.image_rect()
+            self.moved.emit(self.drag_box, delta.x() * self.source_size[0] / rect.width(),
+                            delta.y() * self.source_size[1] / rect.height())
+        else:
+            self.update_cursor(event.position())
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_origin = None
+            self.update_cursor(event.position())
+        super().mouseReleaseEvent(event)
+
+    def leaveEvent(self, event):
+        if self.drag_origin is None:
+            self.unsetCursor()
+        super().leaveEvent(event)
+
+    def wheelEvent(self, event):
+        if not self.source_size:
+            event.ignore()
+            return
+        # Qt angleDelta units: 120 per notch. Pixel deltas are supplied by
+        # some touchpads instead; 40 logical pixels represent one small step.
+        steps = (event.pixelDelta().y() / 40 if not event.pixelDelta().isNull()
+                 else event.angleDelta().y() / 120)
+        if steps:
+            self.drag_origin = None
+            self.zoomed.emit(steps)
+            self.update_cursor(event.position())
+        event.accept()
 
     def paintEvent(self, event):
         super().paintEvent(event)
@@ -150,11 +224,7 @@ class PreviewCanvas(QFrame):
             painter.setPen(QColor('#718096'))
             painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, tr('preview_empty', self.language))
             return
-        bounds = QRectF(self.rect().adjusted(10, 10, -10, -10))
-        scaled = self.pixmap.size()
-        scaled.scale(bounds.size().toSize(), Qt.AspectRatioMode.KeepAspectRatio)
-        image_rect = QRectF(0, 0, scaled.width(), scaled.height())
-        image_rect.moveCenter(bounds.center())
+        image_rect = self.image_rect()
         painter.drawPixmap(image_rect.toRect(), self.pixmap)
         left, top, right, bottom = self.crop
         source_width, source_height = self.source_size
@@ -170,6 +240,8 @@ class PreviewCanvas(QFrame):
                                crop_rect.top() - image_rect.top()), shade)
         painter.fillRect(QRectF(crop_rect.left(), crop_rect.bottom(), crop_rect.width(),
                                image_rect.bottom() - crop_rect.bottom()), shade)
+        painter.setPen(QPen(QColor('#111827'), 3.5))
+        painter.drawRect(crop_rect)
         painter.setPen(QPen(QColor('#f8fafc'), 1.5))
         painter.drawRect(crop_rect)
 
@@ -196,7 +268,23 @@ class PreviewPanel(QFrame):
         title_row.addWidget(self.icon)
         title_row.addWidget(self.title)
         title_row.addStretch()
+        self.reset_crop = QPushButton()
+        self.reset_crop.setEnabled(False)
+        title_row.addWidget(self.reset_crop)
         layout.addLayout(title_row)
+        ratio_row = QHBoxLayout()
+        ratio_row.setSpacing(6)
+        self.ratio_label = QLabel()
+        self.image_ratio = ThemedComboBox()
+        self.image_ratio.setSizeAdjustPolicy(ThemedComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        self.image_ratio.setMinimumContentsLength(12)
+        self.image_ratio.addItem('', None)
+        for key in ASPECT_RATIOS:
+            self.image_ratio.addItem(key, key)
+        self.ratio_label.setBuddy(self.image_ratio)
+        ratio_row.addWidget(self.ratio_label)
+        ratio_row.addWidget(self.image_ratio, 1)
+        layout.addLayout(ratio_row)
         layout.addWidget(self.canvas, 1)
         layout.addWidget(self.details)
         self.retranslate(language)
@@ -205,6 +293,11 @@ class PreviewPanel(QFrame):
         self.canvas.language = language
         self.canvas.update()
         self.title.setText(tr('preview', language))
+        self.reset_crop.setText(tr('reset_crop', language))
+        self.reset_crop.setToolTip(tr('reset_crop_tip', language))
+        self.ratio_label.setText(tr('image_ratio', language))
+        self.image_ratio.setAccessibleName(tr('image_ratio', language))
+        self.image_ratio.setItemText(1, tr('ratio_original', language))
         if self.source_size is None:
             self.details.setText(tr('preview_details_empty', language))
 
@@ -223,6 +316,8 @@ class MainWindow(QMainWindow):
         stored_theme = self.app_settings.value('theme', 'dark') if theme is None else theme
         self.theme = normalize_theme(stored_theme)
         self.paths, self.worker = [], None
+        self.manual_crops = {}
+        self.source_sizes = {}
         self.busy = False
         self.skipped = self.processed = self.errors = self.scan_errors = 0
         self.first_output_dir = None
@@ -307,6 +402,10 @@ class MainWindow(QMainWindow):
         file_column.addWidget(self.table, 1)
         content.addLayout(file_column, 3)
         self.preview = PreviewPanel(self.language)
+        self.preview.canvas.moved.connect(self.move_preview_crop)
+        self.preview.canvas.zoomed.connect(self.zoom_preview_crop)
+        self.preview.reset_crop.clicked.connect(self.reset_current_crop)
+        self.preview.image_ratio.currentIndexChanged.connect(self.image_ratio_changed)
         content.addWidget(self.preview, 2)
 
         settings_layout = QHBoxLayout()
@@ -479,7 +578,7 @@ class MainWindow(QMainWindow):
         for toggle in (self.recursive, self.upscaling, self.open_when_finished):
             toggle.set_theme(self.theme)
         for combo in (self.language_combo, self.theme_combo, self.aspect,
-                      self.output_size, self.output_format, self.custom_dimension):
+                      self.output_size, self.output_format, self.custom_dimension, self.preview.image_ratio):
             combo.set_theme(self.theme)
         self.apply_icons()
 
@@ -605,6 +704,15 @@ class MainWindow(QMainWindow):
         preset = self.output_size.currentData()
         if preset is None:
             return
+        for path, state in list(self.manual_crops.items()):
+            if not state.framing:
+                continue
+            size = self.source_sizes[path]
+            options = image_options(size, self.current_options(), state)
+            box = resolve_crop(size, options, state)
+            clamped = crop_adjustment(size, options, box)
+            self.manual_crops[path] = replace(state, center_x=clamped.center_x,
+                center_y=clamped.center_y, scale=max(minimum_scale(size, options), state.scale))
         portrait = bool(self.preview.source_size and self.preview.source_size[1] > self.preview.source_size[0])
         parts = [self.aspect.currentText(), self.preset_text(preset, portrait)]
         if preset.dimensions is not None or preset.long_edge is not None or preset.key == 'custom':
@@ -617,6 +725,9 @@ class MainWindow(QMainWindow):
         self.load_preview(current_row)
 
     def load_preview(self, row):
+        self.preview.reset_crop.setEnabled(False)
+        self.preview.image_ratio.setEnabled(False)
+        self.preview.canvas.drag_origin = None
         if row < 0 or row >= len(self.paths):
             self.preview.canvas.clear_preview()
             self.preview.source_size = None
@@ -630,6 +741,7 @@ class MainWindow(QMainWindow):
                 pixmap = QPixmap.fromImage(ImageQt(thumbnail.convert('RGBA'))).copy()
             previous_portrait = bool(self.preview.source_size and self.preview.source_size[1] > self.preview.source_size[0])
             self.preview.source_size, self.preview.pixmap = source_size, pixmap
+            self.source_sizes[self.paths[row]] = source_size
             if previous_portrait != (source_size[1] > source_size[0]):
                 preset = self.output_size.currentData()
                 self.populate_output_sizes(preset.key if preset else None)
@@ -641,19 +753,83 @@ class MainWindow(QMainWindow):
             self.preview.details.setText(self.t('preview_unavailable', error=f'{type(exc).__name__}: {exc}'))
 
     def refresh_preview(self):
+        self.sync_image_ratio()
         source_size = self.preview.source_size
         if not source_size or self.output_size.currentData() is None:
             return
-        box = crop_box(*source_size, self.aspect.currentData())
+        path = self.current_path()
+        state = self.manual_crops.get(path)
+        options = image_options(source_size, self.current_options(), state)
+        box = resolve_crop(source_size, options, state)
         cropped_size = box[2] - box[0], box[3] - box[1]
-        final_size, blocked = output_size(cropped_size, self.current_options(),
+        final_size, blocked = output_size(cropped_size, options,
                                           portrait=source_size[1] > source_size[0])
         self.preview.canvas.set_preview(self.preview.pixmap, source_size, box)
+        self.preview.reset_crop.setEnabled(not self.busy and state is not None and state.framing)
         suffix = f" ({self.t('upscaling_avoided')})" if blocked else ''
         self.preview.details.setText(
             f"{self.t('source')}: {source_size[0]} × {source_size[1]}\n"
             f"{self.t('crop')}: {cropped_size[0]} × {cropped_size[1]}\n"
             f"{self.t('output')}: {final_size[0]} × {final_size[1]}{suffix}")
+
+    def current_path(self):
+        row = self.table.currentRow()
+        return self.paths[row] if 0 <= row < len(self.paths) else None
+
+    def sync_image_ratio(self):
+        combo = self.preview.image_ratio
+        state = self.manual_crops.get(self.current_path())
+        key = state.ratio_override if state else None
+        combo.blockSignals(True)
+        combo.setItemText(0, self.t('use_batch_ratio', ratio=self.aspect.currentText()))
+        combo.setCurrentIndex(combo.findData(key))
+        combo.blockSignals(False)
+        combo.setToolTip(combo.currentText())
+        combo.setEnabled(not self.busy and self.preview.source_size is not None)
+
+    def image_ratio_changed(self):
+        if self.busy or not self.preview.source_size:
+            return
+        path = self.current_path()
+        state = self.manual_crops.get(path, ManualCrop(framing=False))
+        state = replace(state, ratio_override=self.preview.image_ratio.currentData())
+        if state.ratio_override is None and not state.framing:
+            self.manual_crops.pop(path, None)
+        else:
+            self.manual_crops[path] = state
+        self.preview.canvas.drag_origin = None
+        self.settings_changed()
+
+    def move_preview_crop(self, box, dx, dy):
+        if self.busy or not self.preview.source_size:
+            return
+        path = self.current_path()
+        previous = self.manual_crops.get(path)
+        options = image_options(self.preview.source_size, self.current_options(), previous)
+        moved = move_crop(self.preview.source_size, options, box, dx, dy)
+        if moved != self.preview.canvas.crop:
+            self.manual_crops[path] = replace(crop_adjustment(self.preview.source_size, options, moved),
+                ratio_override=previous.ratio_override if previous else None)
+            self.refresh_preview()
+
+    def zoom_preview_crop(self, steps):
+        if self.busy or not self.preview.source_size:
+            return
+        path = self.current_path()
+        state = zoom_crop(self.preview.source_size, self.current_options(), self.manual_crops.get(path), steps)
+        if state != self.manual_crops.get(path) and (steps > 0 or path in self.manual_crops):
+            self.manual_crops[path] = state
+            self.refresh_preview()
+
+    def reset_current_crop(self):
+        if not self.busy:
+            path = self.current_path()
+            state = self.manual_crops.get(path)
+            if state and state.ratio_override is not None:
+                self.manual_crops[path] = ManualCrop(ratio_override=state.ratio_override, framing=False)
+            else:
+                self.manual_crops.pop(path, None)
+            self.refresh_preview()
 
     def choose_input(self):
         menu = QMenu(self)
@@ -671,6 +847,7 @@ class MainWindow(QMainWindow):
 
     def set_busy(self, value):
         self.busy = value
+        self.preview.canvas.setEnabled(not value)
         for widget in (self.drop, self.recursive, self.clear, self.output_size, self.output_format,
                        self.language_combo, self.theme_combo):
             widget.setEnabled(not value)
@@ -721,10 +898,14 @@ class MainWindow(QMainWindow):
         if self.busy:
             return
         self.paths.clear()
+        self.manual_crops.clear()
+        self.source_sizes.clear()
+        self.preview.reset_crop.setEnabled(False)
         self.skipped = self.scan_errors = 0
         self.table.setRowCount(0)
         self.preview.canvas.clear_preview()
         self.preview.source_size = self.preview.pixmap = None
+        self.sync_image_ratio()
         self.preview.details.setText(self.t('preview_details_empty'))
         self.log.clear()
         self.progress.setValue(0)
@@ -742,7 +923,7 @@ class MainWindow(QMainWindow):
         for row in range(len(self.paths)):
             self.table.item(row, 1).setText(self.t('queued'))
         self.log.appendPlainText(self.summary.text())
-        self.worker = Worker(list(self.paths), parent=self, options=self.current_options())
+        self.worker = Worker(list(self.paths), parent=self, options=self.current_options(), crops=self.manual_crops)
         self.worker.progress.connect(self.on_progress)
         self.worker.result.connect(self.on_result)
         self.worker.finished.connect(self.finish_processing)

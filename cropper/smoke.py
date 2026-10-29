@@ -11,7 +11,7 @@ import PIL
 import PySide6
 import pillow_heif
 import _pillow_heif
-from PIL import Image, features
+from PIL import Image, ImageChops, features
 from PySide6.QtCore import QLibraryInfo, QSettings
 from PySide6.QtWidgets import QApplication
 from .branding import TAGLINE, DESCRIPTION
@@ -19,6 +19,8 @@ from .branding import TAGLINE, DESCRIPTION
 from .gui import MainWindow
 from .discovery import OUTPUT_DIR
 from .input_formats import EXTENSIONS
+from .input_formats import load_primary_image
+from .geometry import crop_size, image_options, output_size
 from .resources import resource_path
 from .version import __version__
 
@@ -224,6 +226,76 @@ def run(report_path):
                     custom_checks.append({'ratio': ratio, 'dimension': axis,
                                           'value': value, 'processed': 14, 'errors': 0})
             report['custom_validation'] = custom_checks
+            # Exercise the same manual states/snapshot in source, frozen and
+            # installed builds, including the bundled HEIC/HEIF decoder.
+            window.aspect.setCurrentText('2:1')
+            select_output('maximum')
+            interactive_checks = []
+            expected_pixels = {}
+            for row, path in enumerate(window.paths):
+                window.table.selectRow(row)
+                window.zoom_preview_crop(8 + row / 2)
+                window.move_preview_crop(window.preview.canvas.crop, 10, -10)
+                box = window.preview.canvas.crop
+                with load_primary_image(path) as original:
+                    expected_pixels[row] = original.crop(box).convert('RGBA')
+                interactive_checks.append({'file': path.name, 'box': box,
+                                           'output': crop_size(box)})
+            window.process.click()
+            wait_idle()
+            assert (window.processed, window.errors) == (14, 0)
+            for row, expected in expected_pixels.items():
+                with Image.open(window.table.item(row, 1).toolTip()) as output:
+                    assert output.size == expected.size
+                    assert ImageChops.difference(expected, output.convert('RGBA')).getbbox(alpha_only=False) is None
+            before_reset = len(window.manual_crops)
+            window.preview.reset_crop.click()
+            assert len(window.manual_crops) == before_reset - 1
+            report['interactive_validation'] = {'files': interactive_checks,
+                'pixel_identical': True, 'reset_is_local': True, 'processed': 14, 'errors': 0}
+            window.manual_crops.clear()
+            window.aspect.setCurrentText('1:1')
+            select_output('maximum')
+            ratios = (None, '4:3', '2:1', 'Original')
+            for row in range(len(window.paths)):
+                window.table.selectRow(row)
+                key = ratios[row % len(ratios)]
+                window.preview.image_ratio.setCurrentIndex(window.preview.image_ratio.findData(key))
+                if key is not None:
+                    window.zoom_preview_crop(4 + row / 2)
+                    window.move_preview_crop(window.preview.canvas.crop, 5, -5)
+            ratio_checks = []
+            window.upscaling.setChecked(True)
+            for preset, axis, value in (('maximum', None, None), ('exact_512_512', None, None),
+                                         ('custom', 'width', 32), ('custom', 'height', 24)):
+                select_output(preset)
+                if axis:
+                    window.custom_dimension.setCurrentIndex(window.custom_dimension.findData(axis))
+                    window.custom_value.setValue(value)
+                expected_by_row = {}
+                files = []
+                for row, path in enumerate(window.paths):
+                    window.table.selectRow(row)
+                    box = window.preview.canvas.crop
+                    size = window.preview.source_size
+                    options = image_options(size, window.current_options(), window.manual_crops.get(path))
+                    target, _ = output_size(crop_size(box), options, portrait=size[1] > size[0])
+                    with load_primary_image(path) as source:
+                        pixels = source.crop(box).convert('RGBA')
+                    if pixels.size != target:
+                        pixels = pixels.resize(target, Image.Resampling.LANCZOS)
+                    expected_by_row[row] = pixels
+                    files.append({'file': path.name, 'ratio': ratios[row % 4], 'output': target})
+                window.process.click()
+                wait_idle()
+                assert (window.processed, window.errors) == (14, 0)
+                for row, expected in expected_by_row.items():
+                    with Image.open(window.table.item(row, 1).toolTip()) as output:
+                        assert output.size == expected.size
+                        assert ImageChops.difference(expected, output.convert('RGBA')).getbbox(alpha_only=False) is None
+                ratio_checks.append({'preset': preset, 'axis': axis, 'files': files,
+                                     'processed': 14, 'errors': 0, 'pixel_identical': True})
+            report['ratio_validation'] = ratio_checks
             window.grab().save(str(report_path.with_suffix('.png')))
             report['passed'] = True
     except Exception:

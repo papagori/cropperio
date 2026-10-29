@@ -3,6 +3,7 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $setupPath = Join-Path $projectRoot 'dist\Cropperio_Setup.exe'
 $installTarget = Join-Path $env:TEMP "Cropperio-distribution-test-$PID"
 $reportPath = Join-Path $projectRoot 'test-results\installer-smoke.json'
+$setupLog = Join-Path $projectRoot 'test-results\installer-setup.log'
 
 if (-not (Test-Path -LiteralPath $setupPath)) {
     throw "Installer not found: $setupPath"
@@ -13,7 +14,7 @@ if (Test-Path -LiteralPath $installTarget) {
 
 $install = Start-Process -FilePath $setupPath -ArgumentList @(
     '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/NOICONS',
-    "/DIR=$installTarget"
+    "/DIR=$installTarget", "/LOG=$setupLog"
 ) -WindowStyle Hidden -PassThru -Wait
 if ($install.ExitCode -ne 0) {
     throw "Installer exited with code $($install.ExitCode)"
@@ -69,6 +70,18 @@ if ($report.version -ne (Get-Item -LiteralPath $installedExe).VersionInfo.Produc
 if (@($report.custom_validation).Count -ne 4 -or
     @($report.custom_validation | Where-Object { $_.processed -ne 14 -or $_.errors -ne 0 }).Count) {
     throw 'Installed Custom width/height processing did not pass'
+}
+if (-not $report.interactive_validation.pixel_identical -or
+    -not $report.interactive_validation.reset_is_local -or
+    $report.interactive_validation.processed -ne 14 -or
+    $report.interactive_validation.errors -ne 0) {
+    throw 'Installed interactive crop preview/export validation did not pass'
+}
+if (@($report.ratio_validation).Count -ne 4 -or
+    @($report.ratio_validation | Where-Object {
+        $_.processed -ne 14 -or $_.errors -ne 0 -or -not $_.pixel_identical
+    }).Count) {
+    throw 'Installed mixed-ratio batch validation did not pass'
 }
 
 $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @(

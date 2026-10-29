@@ -1,4 +1,4 @@
-# Cropperio 2.3.0
+# Cropperio 2.4.0 — Interactive Crop
 
 **Drop. Crop. Export. Voilà.**
 
@@ -8,13 +8,14 @@ Choose a ratio, select an output size, preview the crop, and process your images
 
 ## Download for Windows
 
-**Recommended release:** Cropperio 2.3.0
+**Recommended release:** Cropperio 2.4.0
 
-- **Release:** [Cropperio 2.3.0](https://github.com/papagori/cropperio/releases/tag/v2.3.0)
-- **Installer:** [Download Cropperio_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.3.0/Cropperio_Setup.exe)
-- **Installer SHA-256:** `273fa4c74a8511c581e0516a30c3dba3f81321d49ab583efdd0b33fe6c2f7ca9`
-- **Standalone:** [Download Cropperio.exe](https://github.com/papagori/cropperio/releases/download/v2.3.0/Cropperio.exe)
-- **Standalone SHA-256:** `4d42aa6687b581a5e02ae6135b2adca3b7eb00436d727fafa9f121a95ddf4a21`
+- **Release:** [Cropperio 2.4.0](https://github.com/papagori/cropperio/releases/tag/v2.4.0)
+- **Installer:** [Download Cropperio_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.4.0/Cropperio_Setup.exe)
+- **Standalone:** [Download Cropperio.exe](https://github.com/papagori/cropperio/releases/download/v2.4.0/Cropperio.exe)
+- **SHA-256 and exact file sizes:** see the [2.4.0 release notes](https://github.com/papagori/cropperio/releases/tag/v2.4.0), calculated from the final binaries built from the tagged commit.
+
+The previous [2.3.0 release](https://github.com/papagori/cropperio/releases/tag/v2.3.0) remains available.
 
 Cropperio is the new name of PhotoCrop. The historical [v2.2.2 release](https://github.com/papagori/cropperio/releases/tag/v2.2.2) remains available under its original asset filenames. The installer is available in **English**, **Français**, and **日本語**.
 
@@ -30,6 +31,8 @@ The Windows installer includes everything required to run Cropperio, including H
 - Use output presets that update dynamically for the selected ratio and reverse automatically for portrait images.
 - Keep the largest possible crop with **Maximum Resolution**, or choose a standard output size.
 - Preview the crop before processing, with an overlay showing the areas that will be removed.
+- Drag inside the preview crop to move it, use the wheel to zoom, and reset each image independently.
+- Override the batch ratio for individual images using the compact Image ratio selector in the preview.
 - Export to **JPEG, PNG, or TGA**; PNG and TGA preserve source alpha transparency.
 - Apply EXIF orientation before crop calculations.
 - Preserve compatible ICC profiles and relevant metadata where supported.
@@ -50,9 +53,37 @@ The Windows installer includes everything required to run Cropperio, including H
 6. Click **Process**.
 7. Find the exported files in `Cropperio_Export` beside the source images.
 
-On first launch, Cropperio starts with **4:3** and **Maximum Resolution** selected. Choosing **Original** disables cropping and offers **Original Resolution** plus 800, 1200, 1600, 2000, 3000, 4000, 5000, 6000, and 8000 px long-edge choices.
+On first launch, Cropperio starts with **4:3** and **Maximum Resolution** selected. Choosing **Original** starts with the entire image and offers **Original Resolution** plus 800, 1200, 1600, 2000, 3000, 4000, 5000, 6000, and 8000 px long-edge choices. Interactive zoom retains that source image's proportions.
 
-For cropped ratios, **Maximum Resolution** keeps the largest centered crop without resizing. Standard presets depend on the selected ratio. If a requested size exceeds the available cropped image, Cropperio keeps the maximum available resolution unless **Allow Upscaling** is enabled.
+For cropped ratios, **Maximum Resolution** exports the selected source crop without resizing; untouched images keep the existing largest centered crop. Standard presets depend on the selected ratio. If a requested size exceeds the available source, Cropperio keeps the maximum available resolution unless **Allow Upscaling** is enabled.
+
+### Interactive Crop
+
+Every image starts with the same automatic centered crop as before. Optional adjustments happen directly in the preview:
+
+- **Left drag inside the crop:** move within the source boundaries, with open/closed hand cursors. The dark outer area does not start a drag.
+- **Wheel up/down:** shrink/grow the crop by about 4% per notch, retaining the ratio. Fractional wheel and touchpad pixel deltas are supported.
+- **Reset crop:** return only the selected image to automatic framing, keeping its individual ratio if present. EN/FR/JA labels are available.
+
+The maximum is the existing largest crop. Without upscaling, standard and Custom output dimensions set the minimum; if the source is already too small, the full available crop and existing no-upscaling behavior apply. With upscaling, or Maximum/Original Resolution, the safety minimum is 16 source pixels on the short edge (or the source size for smaller images). Ratios use nearest-pixel rounding, including the historical rounding at maximum size.
+
+Each adjusted source path has its own in-memory center and zoom. Selecting another image restores its own framing; untouched images remain automatic. Clearing the batch removes these session adjustments. Ratio changes retain the relative center/zoom with boundary clamping. Output changes retain valid framing and enlarge crops when the no-upscaling minimum increases, including images currently out of view.
+
+Source/Crop/Output report the oriented source, actual selected source pixels, and actual export dimensions. Preview and export use one shared integer crop resolver. Dragging and zooming repaint the cached thumbnail; final decoding/cropping and the optional single LANCZOS resize happen during Process. There are no resize handles, rotation controls, or separate editing mode.
+
+### Per-image ratio override
+
+The global ratio remains the batch default. The compact **Image ratio** selector in the preview initially reads **Use batch ratio (current ratio)**. Choose Original or any existing ratio to override only the selected image. Its ratio, center and zoom are restored when you return to it. A global ratio change affects inherited images while explicit overrides keep their own ratio, including Original.
+
+Changing an individual ratio retains the relative center and zoom as far as source boundaries and the no-upscaling minimum allow. **Use batch ratio** removes that ratio override while preserving valid manual framing. **Reset crop** centers and maximizes the current crop while keeping its ratio; use the selector to remove the ratio separately. Ratio overrides are session-only and disappear when the batch is cleared.
+
+One output request still serves the entire batch:
+
+- **Numeric preset:** keep the preset's long edge (`max(width, height)`, or the selected long-edge value). Calculate the short edge from the effective ratio, round to the nearest integer pixel, and reverse dimensions for portrait sources. A 1200 px reference yields 1200 × 1200 at 1:1, 1200 × 900 at 4:3, and 1200 × 600 at 2:1; portrait sources reverse those dimensions. Original uses the oriented source's actual proportions. Images with no ratio override retain the existing preset calculations exactly.
+- **Custom Width/Height:** keep the chosen axis/value and calculate the other dimension from each image's effective ratio, using the existing portrait convention.
+- **Maximum/Original Resolution:** export each actual source crop without resizing.
+
+All requests retain the existing no-upscaling rule. Preview and export resolve the same per-image ratio, crop and output options from an immutable worker snapshot; one image cannot change the next image's settings.
 
 ### Smaller sizes and Custom
 
@@ -141,9 +172,9 @@ $env:QT_QPA_PLATFORM='offscreen'
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Cropperio 2.3.0 release validation includes:
+Cropperio 2.4.0 local validation includes:
 
-- **61 automated tests**, retaining the previous 45 tests and adding Custom sizing, presets, splash, branding and icon coverage.
+- **111 automated tests**: all 92 Interactive Crop tests plus 19 ratio-override geometry, UI, independent-state, mixed-batch and output tests. The 19 new tests also pass with native Windows Qt rendering.
 - Frozen `Cropperio.exe` validation through its packaged self-test.
 - Normal startup/splash checks in Python, frozen and installed modes.
 - Installer install/run/uninstall validation in an isolated location.
@@ -177,7 +208,7 @@ To build only the executable with PyInstaller:
 To compile the installer directly with Inno Setup 6 after building the executable:
 
 ```powershell
-ISCC.exe /DAppVersion=2.3.0 installer\Cropperio.iss
+ISCC.exe /DAppVersion=2.4.0 installer\Cropperio.iss
 ```
 
 The installer can be validated with a silent isolated install, frozen application self-test, and uninstall:

@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 from PIL import Image, ImageDraw
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
 
 from cropper.gui import MainWindow
@@ -39,11 +40,13 @@ def main():
     OUTPUT.mkdir(exist_ok=True)
     app = QApplication.instance() or QApplication([])
     app.setStyle('Fusion')
-    variants = (('dark', 'en'), ('light', 'fr'), ('classic', 'ja'))
+    variants = tuple((theme, language) for theme in ('dark', 'light', 'classic')
+                     for language in ('en', 'fr', 'ja'))
     with tempfile.TemporaryDirectory(prefix='cropperio-ui-captures-') as temporary:
         paths = make_images(Path(temporary))
         for theme, language in variants:
-            window = MainWindow(language=language, theme=theme)
+            settings = QSettings(str(Path(temporary) / 'capture.ini'), QSettings.Format.IniFormat)
+            window = MainWindow(language=language, theme=theme, settings=settings)
             window.open_when_finished.blockSignals(True)
             window.open_when_finished.setChecked(True)
             window.open_when_finished.blockSignals(False)
@@ -52,7 +55,11 @@ def main():
             window.grab().save(str(OUTPUT / f'ui-{theme}-{language}-empty.png'))
             window.add_paths(paths)
             wait_idle(app, window)
+            window.aspect.setCurrentText('1:1')
             window.table.selectRow(1)
+            window.preview.image_ratio.setCurrentIndex(window.preview.image_ratio.findData('4:3'))
+            window.zoom_preview_crop(8)
+            window.move_preview_crop(window.preview.canvas.crop, 50, -80)
             app.processEvents()
             window.grab().save(str(OUTPUT / f'ui-{theme}-{language}-preview.png'))
             if theme == 'light':

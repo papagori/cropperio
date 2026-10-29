@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 
 from .export import export_image, pixels_for_resize
-from .geometry import crop_box, output_size
+from .geometry import crop_box, resolve_crop, output_size, image_options
 from .input_formats import load_primary_image, METADATA_ERRORS
 from .settings import ProcessingOptions
 
@@ -21,12 +21,13 @@ class Result:
     upscaling_blocked: bool = False
 
 
-def process_image(source, options=ProcessingOptions()):
+def process_image(source, options=ProcessingOptions(), manual_crop=None):
     source = Path(source)
     try:
         with load_primary_image(source) as image:
             before = image.size
-            box = crop_box(*before, options.effective_ratio)
+            options = image_options(before, options, manual_crop)
+            box = resolve_crop(before, options, manual_crop)
             try:
                 exif = image.getexif()
                 exif.pop(274, None)
