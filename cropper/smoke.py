@@ -1,5 +1,6 @@
 """Opt-in standalone build verification with temporary synthetic inputs."""
 import json
+import shutil
 import sys
 import tempfile
 import time
@@ -8,11 +9,16 @@ from pathlib import Path
 
 import PIL
 import PySide6
-from PIL import Image
-from PySide6.QtCore import QLibraryInfo
+import pillow_heif
+import _pillow_heif
+from PIL import Image, features
+from PySide6.QtCore import QLibraryInfo, QSettings
 from PySide6.QtWidgets import QApplication
+from .branding import TAGLINE, DESCRIPTION
 
 from .gui import MainWindow
+from .discovery import OUTPUT_DIR
+from .input_formats import EXTENSIONS
 from .resources import resource_path
 from .version import __version__
 
@@ -23,6 +29,9 @@ def run(report_path):
     frozen = bool(getattr(sys, 'frozen', False))
     report = {'passed': False, 'frozen': frozen, 'version': __version__,
               'pillow': PIL.__version__, 'pyside6': PySide6.__version__, 'batches': [],
+              'pillow_heif': pillow_heif.__version__,
+              'heif_backend': pillow_heif.libheif_info(),
+              'native_avif': features.check('avif'),
               'runtime': {
                   'executable': Path(sys.executable).name,
                   'external_python_required': False,
@@ -32,7 +41,10 @@ def run(report_path):
               }}
     app = QApplication.instance() or QApplication([])
     app.setStyle('Fusion')
-    window = MainWindow(language='en', theme='dark')
+    # Validation must not change the user's language/theme/folder preference.
+    settings_directory = tempfile.TemporaryDirectory(prefix='cropperio-smoke-settings-')
+    settings = QSettings(str(Path(settings_directory.name) / 'settings.ini'), QSettings.Format.IniFormat)
+    window = MainWindow(language='en', theme='dark', settings=settings)
 
     def wait_idle():
         deadline = time.monotonic() + 30
@@ -55,6 +67,9 @@ def run(report_path):
             assert Path(sys.executable).name.lower() == 'cropperio.exe'
             assert report['runtime']['icon_bundled']
             assert report['runtime']['qt_plugins_available']
+            assert Path(_pillow_heif.__file__).is_relative_to(Path(sys._MEIPASS))
+        assert report['native_avif']
+        assert report['heif_backend']['decoders']
         with tempfile.TemporaryDirectory(prefix='cropperio-') as directory:
             root = Path(directory) / 'Été 東京'
             root.mkdir()
@@ -71,7 +86,12 @@ def run(report_path):
             report['ui'] = {'languages': ['en', 'fr', 'ja'],
                             'themes': ['dark', 'light', 'classic'],
                             'footer': window.footer_gpl.text(),
-                            'github': 'https://github.com/papagori/cropperio'}
+                            'github': 'https://github.com/papagori/cropperio',
+                            'tagline': window.tagline.text(),
+                            'description': window.subtitle.text()}
+            assert window.tagline.text() == TAGLINE
+            assert window.subtitle.text() == DESCRIPTION
+            assert not window.process.icon().isNull()
             window.language_combo.setCurrentIndex(window.language_combo.findData('en'))
             window.theme_combo.setCurrentIndex(window.theme_combo.findData('dark'))
             window.add_paths([root])
@@ -118,6 +138,92 @@ def run(report_path):
                     'allow_upscaling': True, 'format': output_format,
                     'landscape': (1024, 1024), 'portrait': (1024, 1024),
                     'processed': 2, 'expected_errors': 1})
+
+            # Decode versioned fixtures (not files encoded by this executable).
+            # This catches missing native HEVC/AVIF libraries after packaging.
+            fixture_root = (resource_path('validation-inputs') if frozen else
+                            resource_path('tests/fixtures/input_formats'))
+            input_root = root / 'formats'
+            input_root.mkdir()
+            for fixture in fixture_root.iterdir():
+                if fixture.suffix.lower() in EXTENSIONS:
+                    shutil.copyfile(fixture, input_root / fixture.name)
+            shutil.copyfile(input_root / 'sample.jpg', input_root / 'unsupported.NEF')
+            window.clear.click()
+            window.add_paths([input_root])
+            wait_idle()
+            assert len(window.paths) == 14
+            assert all(path.suffix.lower() in EXTENSIONS for path in window.paths)
+            window.aspect.setCurrentIndex(window.aspect.findData(None))
+            select_output('original')
+            expected_sizes = {'primary-second.heif': (80, 120), 'alpha.avif': (80, 120),
+                              'sample.ico': (64, 64)}
+            input_checks = []
+            for row, path in enumerate(window.paths):
+                size = expected_sizes.get(path.name, (96, 64))
+                window.table.selectRow(row)
+                app.processEvents()
+                assert window.preview.source_size == size, path.name
+                assert window.preview.pixmap and not window.preview.pixmap.isNull(), path.name
+                input_checks.append({'file': path.name, 'size': size, 'preview': True})
+            for output_format, extension in (('JPEG', '.jpg'), ('PNG', '.png'), ('TGA', '.tga')):
+                window.output_format.setCurrentText(output_format)
+                window.process.click()
+                wait_idle()
+                assert (window.processed, window.errors) == (14, 0)
+                for check in input_checks:
+                    path = input_root / OUTPUT_DIR / (Path(check['file']).stem + extension)
+                    # sample.jpg/jpeg/png/etc share a stem; collision suffixes
+                    # are validated by the baseline batches. Use unique fixtures
+                    # for detailed codec/alpha/first-image output checks here.
+                    if check['file'].startswith('sample.'):
+                        continue
+                    with Image.open(path) as output:
+                        output.load()
+                        assert output.size == check['size'], check['file']
+                        assert output.format == output_format
+                        if check['file'] in ('oriented.heic', 'pages.tiff', 'sequence.avif'):
+                            red = output.convert('RGB').getpixel((10, 10))
+                            assert red[0] > 200 and red[1] < 50, (check['file'], red)
+                        if check['file'] in ('primary-second.heif', 'alpha.avif', 'animated.gif'):
+                            if output_format != 'JPEG':
+                                assert output.mode == 'RGBA'
+                                assert output.getpixel((2, 2))[3] == 0
+                            else:
+                                assert output.getpixel((2, 2)) == (255, 255, 255)
+            report['input_validation'] = {'files': input_checks,
+                                          'output_formats': ['JPEG', 'PNG', 'TGA'],
+                                          'raw_ignored': True,
+                                          'heif_binding': Path(_pillow_heif.__file__).name,
+                                          'windows_codec_required': False}
+            custom_checks = []
+            window.upscaling.setChecked(False)
+            window.output_format.setCurrentText('PNG')
+            for ratio in ('4:3', 'Original'):
+                window.aspect.setCurrentIndex(0 if ratio == 'Original' else window.aspect.findText(ratio))
+                select_output('custom')
+                assert window.custom_controls.isVisible()
+                for axis, value in (('width', 32), ('height', 24)):
+                    window.custom_dimension.setCurrentIndex(window.custom_dimension.findData(axis))
+                    window.custom_value.setValue(value)
+                    window.process.click()
+                    wait_idle()
+                    assert (window.processed, window.errors) == (14, 0)
+                    for row, check in enumerate(input_checks):
+                        width, height = check['size']
+                        a, b = ((width, height) if ratio == 'Original' else
+                                (3, 4) if height > width else (4, 3))
+                        expected = ((value, max(1, round(value * b / a))) if axis == 'width' else
+                                    (max(1, round(value * a / b)), value))
+                        output_path = window.table.item(row, 1).toolTip()
+                        with Image.open(output_path) as output:
+                            assert output.size == expected, (check['file'], ratio, axis)
+                        window.table.selectRow(row)
+                        app.processEvents()
+                        assert f'{expected[0]} × {expected[1]}' in window.preview.details.text()
+                    custom_checks.append({'ratio': ratio, 'dimension': axis,
+                                          'value': value, 'processed': 14, 'errors': 0})
+            report['custom_validation'] = custom_checks
             window.grab().save(str(report_path.with_suffix('.png')))
             report['passed'] = True
     except Exception:
@@ -127,5 +233,6 @@ def run(report_path):
             window.worker.wait()
             app.processEvents()
         window.close()
+        settings_directory.cleanup()
         report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding='utf-8')
     return 0 if report['passed'] else 1

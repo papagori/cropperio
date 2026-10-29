@@ -24,7 +24,10 @@ class DistributionConfigurationTests(unittest.TestCase):
 
     def test_pyinstaller_spec_embeds_runtime_resources(self):
         spec = (ROOT / 'Cropperio.spec').read_text(encoding='utf-8')
-        self.assertIn("datas=[('assets/cropperio.ico', 'assets')]", spec)
+        self.assertIn("('assets/cropperio.ico', 'assets')", spec)
+        self.assertIn("distribution('pillow-heif')", spec)
+        self.assertIn('binaries=heif_binaries', spec)
+        self.assertIn("('tests/fixtures/input_formats', 'validation-inputs')", spec)
         self.assertIn("icon='assets/cropperio.ico'", spec)
         self.assertIn('version=version_info', spec)
         self.assertIn("name='Cropperio'", spec)

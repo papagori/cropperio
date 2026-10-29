@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .i18n import tr
+from .input_formats import EXTENSIONS
 
-EXTENSIONS = {'.jpg', '.jpeg', '.png', '.tiff', '.tif', '.webp'}
 OUTPUT_DIR = 'Cropperio_Export'
 # Keep legacy export folders out of recursive input discovery. Existing folders
 # are intentionally left untouched; only new exports use OUTPUT_DIR.

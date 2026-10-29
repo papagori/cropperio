@@ -2,24 +2,27 @@
 import os
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image
 from PIL.ImageQt import ImageQt
 from PySide6.QtCore import QRectF, QSettings, Qt, QThread, QUrl, Signal
 from PySide6.QtGui import QColor, QCursor, QDesktopServices, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
-    QMainWindow, QMenu, QPlainTextEdit, QProgressBar, QPushButton, QTableWidget,
+    QLayout, QMainWindow, QMenu, QPlainTextEdit, QProgressBar, QPushButton, QSpinBox, QTableWidget,
     QTableWidgetItem, QVBoxLayout, QWidget, QHeaderView, QStyle,
 )
 
 from .discovery import discover
 from .classic_icons import classic_icon
+from .branding import TAGLINE, DESCRIPTION
+from .icons import wand_icon
 from .export import FORMATS
 from .geometry import crop_box, output_size
 from .i18n import normalize_language, system_language, tr
+from .input_formats import load_primary_image
 from .processing import process_image
 from .resources import resource_path
-from .settings import ASPECT_RATIOS, ProcessingOptions, presets_for_ratio
+from .settings import ASPECT_RATIOS, MAX_CUSTOM_DIMENSION, ProcessingOptions, custom_output, presets_for_ratio
 from .themes import LinkLabel, ThemedComboBox, ToggleSwitch, normalize_theme, theme_stylesheet
 from .version import __version__
 
@@ -68,13 +71,13 @@ class DropArea(QFrame):
         self.setAcceptDrops(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setFixedHeight(108)
+        self.setFixedHeight(92)
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(24, 20, 24, 20)
+        layout.setContentsMargins(24, 8, 24, 8)
         layout.setSpacing(4)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.icon = QLabel()
-        self.icon.setPixmap(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon).pixmap(28, 28))
+        self.icon.setPixmap(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon).pixmap(24, 24))
         self.title = QLabel()
         self.title.setObjectName('dropTitle')
         self.hint = QLabel()
@@ -232,8 +235,10 @@ class MainWindow(QMainWindow):
         root = QWidget()
         self.setCentralWidget(root)
         layout = QVBoxLayout(root)
-        layout.setContentsMargins(26, 22, 26, 22)
-        layout.setSpacing(9)
+        layout.setContentsMargins(26, 20, 26, 20)
+        layout.setSpacing(7)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        self.layout().setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
         header = QHBoxLayout()
         header.setSpacing(10)
@@ -267,7 +272,10 @@ class MainWindow(QMainWindow):
         header.addWidget(self.theme_combo)
         layout.addLayout(header)
 
-        self.subtitle = QLabel()
+        self.tagline = QLabel(TAGLINE)
+        self.tagline.setObjectName('tagline')
+        layout.addWidget(self.tagline)
+        self.subtitle = QLabel(DESCRIPTION)
         self.subtitle.setObjectName('muted')
         layout.addWidget(self.subtitle)
         self.add_label = QLabel()
@@ -302,7 +310,7 @@ class MainWindow(QMainWindow):
         content.addWidget(self.preview, 2)
 
         settings_layout = QHBoxLayout()
-        settings_layout.setContentsMargins(14, 12, 14, 12)
+        settings_layout.setContentsMargins(14, 8, 14, 8)
         settings_layout.setSpacing(14)
         aspect_column = QVBoxLayout()
         aspect_column.setSpacing(6)
@@ -318,6 +326,8 @@ class MainWindow(QMainWindow):
         size_column.setSpacing(6)
         self.size_label = QLabel()
         self.output_size = ThemedComboBox()
+        self.output_size.setMinimumContentsLength(12)
+        self.output_size.setSizeAdjustPolicy(ThemedComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.output_size.setMaxVisibleItems(10)
         self.size_label.setBuddy(self.output_size)
         size_column.addWidget(self.size_label)
@@ -344,7 +354,37 @@ class MainWindow(QMainWindow):
         settings_layout.addLayout(option_column, 3)
         settings_panel = QFrame()
         settings_panel.setObjectName('settingsPanel')
-        settings_panel.setLayout(settings_layout)
+        panel_layout = QVBoxLayout(settings_panel)
+        panel_layout.setContentsMargins(0, 0, 0, 0)
+        panel_layout.setSpacing(0)
+        panel_layout.addLayout(settings_layout)
+        self.custom_controls = QWidget()
+        self.custom_controls.setObjectName('customControls')
+        custom_layout = QHBoxLayout(self.custom_controls)
+        custom_layout.setContentsMargins(14, 0, 14, 10)
+        self.custom_label = QLabel()
+        self.custom_dimension = ThemedComboBox()
+        self.custom_dimension.addItem('', 'width')
+        self.custom_dimension.addItem('', 'height')
+        self.custom_dimension.setFixedWidth(140)
+        axis = self.app_settings.value('custom_dimension', 'width')
+        self.custom_dimension.setCurrentIndex(1 if axis == 'height' else 0)
+        self.custom_value = QSpinBox()
+        self.custom_value.setRange(1, MAX_CUSTOM_DIMENSION)
+        self.custom_value.setFixedWidth(110)
+        try:
+            value = int(self.app_settings.value('custom_value', 1200))
+        except (ValueError, TypeError):
+            value = 1200
+        self.custom_value.setValue(value if 1 <= value <= MAX_CUSTOM_DIMENSION else 1200)
+        self.custom_label.setBuddy(self.custom_dimension)
+        custom_layout.addWidget(self.custom_label)
+        custom_layout.addWidget(self.custom_dimension)
+        custom_layout.addWidget(self.custom_value)
+        custom_layout.addWidget(QLabel('px'))
+        custom_layout.addStretch()
+        panel_layout.addWidget(self.custom_controls)
+        self.custom_controls.hide()
         layout.addWidget(settings_panel)
         self.summary = QLabel()
         self.summary.setObjectName('muted')
@@ -359,7 +399,7 @@ class MainWindow(QMainWindow):
         self.clear.setMinimumWidth(96)
         self.clear.clicked.connect(self.clear_all)
         self.process = QPushButton()
-        self.process.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogApplyButton))
+        self.process.setIcon(wand_icon())
         self.process.setObjectName('primary')
         self.process.setMinimumSize(150, 42)
         self.process.clicked.connect(self.start_processing)
@@ -377,7 +417,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.status)
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
-        self.log.setFixedHeight(78)
+        self.log.setFixedHeight(60)
         layout.addWidget(self.log)
 
         self.footer = QFrame()
@@ -395,6 +435,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.footer)
 
         self.output_size.currentIndexChanged.connect(self.output_changed)
+        self.custom_dimension.currentIndexChanged.connect(self.custom_changed)
+        self.custom_value.valueChanged.connect(self.custom_changed)
         self.aspect.currentIndexChanged.connect(self.aspect_changed)
         self.upscaling.toggled.connect(self.settings_changed)
         self.output_format.currentIndexChanged.connect(self.settings_changed)
@@ -414,6 +456,8 @@ class MainWindow(QMainWindow):
             return self.t('maximum')
         if preset.key == 'original':
             return self.t('original')
+        if preset.key == 'custom':
+            return self.t('custom')
         if preset.long_edge:
             return self.t('long_edge', edge=preset.long_edge)
         width, height = preset.dimensions
@@ -435,7 +479,7 @@ class MainWindow(QMainWindow):
         for toggle in (self.recursive, self.upscaling, self.open_when_finished):
             toggle.set_theme(self.theme)
         for combo in (self.language_combo, self.theme_combo, self.aspect,
-                      self.output_size, self.output_format):
+                      self.output_size, self.output_format, self.custom_dimension):
             combo.set_theme(self.theme)
         self.apply_icons()
 
@@ -446,10 +490,10 @@ class MainWindow(QMainWindow):
         def themed(name, standard):
             return classic_icon(name) if classic else self.style().standardIcon(standard)
 
-        self.drop.icon.setPixmap(themed('folder', QStyle.StandardPixmap.SP_DirOpenIcon).pixmap(28, 28))
+        self.drop.icon.setPixmap(themed('folder', QStyle.StandardPixmap.SP_DirOpenIcon).pixmap(24, 24))
         self.preview.icon.setPixmap(themed('preview', QStyle.StandardPixmap.SP_FileIcon).pixmap(18, 18))
         self.clear.setIcon(themed('trash', QStyle.StandardPixmap.SP_TrashIcon))
-        self.process.setIcon(themed('process', QStyle.StandardPixmap.SP_DialogApplyButton))
+        self.process.setIcon(classic_icon('process') if classic else wand_icon())
         combo_icons = (
             (self.language_combo, themed('language', QStyle.StandardPixmap.SP_FileDialogInfoView)),
             (self.theme_combo, themed('theme', QStyle.StandardPixmap.SP_DesktopIcon)),
@@ -470,7 +514,14 @@ class MainWindow(QMainWindow):
         self.theme_label.setText(self.t('theme'))
         for index, key in enumerate(('theme_dark', 'theme_light', 'theme_classic')):
             self.theme_combo.setItemText(index, self.t(key))
-        self.subtitle.setText(self.t('subtitle'))
+        self.tagline.setText(TAGLINE)
+        self.subtitle.setText(DESCRIPTION)
+        self.custom_label.setText(self.t('dimension'))
+        self.custom_dimension.setItemText(0, self.t('width'))
+        self.custom_dimension.setItemText(1, self.t('height'))
+        self.custom_dimension.setAccessibleName(self.t('dimension'))
+        self.custom_value.setAccessibleName(self.t('custom_value'))
+        self.custom_value.setToolTip(self.t('custom_limit', maximum=MAX_CUSTOM_DIMENSION))
         self.add_label.setText(self.t('add_images_step'))
         self.drop.retranslate(self.language)
         self.recursive.setText(self.t('include_subfolders'))
@@ -504,12 +555,15 @@ class MainWindow(QMainWindow):
         self.status.setText(self.t(key, **values))
 
     def current_options(self):
-        return ProcessingOptions(self.aspect.currentData(), self.output_size.currentData(),
+        preset = self.output_size.currentData()
+        if preset and preset.key == 'custom':
+            preset = custom_output(self.custom_dimension.currentData(), self.custom_value.value())
+        return ProcessingOptions(self.aspect.currentData(), preset,
                                  self.upscaling.isChecked(), self.output_format.currentData(), self.language)
 
     def aspect_changed(self):
         current = self.output_size.currentData()
-        preferred = current.key if current and current.key in ('maximum', 'original') else None
+        preferred = current.key if current and current.key in ('maximum', 'original', 'custom') else None
         self.populate_output_sizes(preferred)
 
     def populate_output_sizes(self, preferred_key=None):
@@ -536,8 +590,15 @@ class MainWindow(QMainWindow):
             return
         self.aspect.setEnabled(not self.busy)
         self.aspect.setToolTip(self.t('portrait_tip'))
-        can_resize = preset.dimensions is not None or preset.long_edge is not None
+        self.custom_controls.setVisible(preset.key == 'custom')
+        self.custom_controls.setEnabled(not self.busy)
+        can_resize = preset.dimensions is not None or preset.long_edge is not None or preset.key == 'custom'
         self.upscaling.setEnabled(not self.busy and can_resize)
+        self.settings_changed()
+
+    def custom_changed(self):
+        self.app_settings.setValue('custom_dimension', self.custom_dimension.currentData())
+        self.app_settings.setValue('custom_value', self.custom_value.value())
         self.settings_changed()
 
     def settings_changed(self):
@@ -546,7 +607,7 @@ class MainWindow(QMainWindow):
             return
         portrait = bool(self.preview.source_size and self.preview.source_size[1] > self.preview.source_size[0])
         parts = [self.aspect.currentText(), self.preset_text(preset, portrait)]
-        if preset.dimensions is not None or preset.long_edge is not None:
+        if preset.dimensions is not None or preset.long_edge is not None or preset.key == 'custom':
             parts.append(self.t('upscaling_allowed' if self.upscaling.isChecked() else 'no_upscaling'))
         parts.append(self.t(f'format_quality_{self.output_format.currentData()}'))
         self.refresh_preview()
@@ -562,9 +623,7 @@ class MainWindow(QMainWindow):
             self.preview.details.setText(self.t('preview_details_empty'))
             return
         try:
-            with Image.open(self.paths[row]) as source:
-                oriented = ImageOps.exif_transpose(source)
-                oriented.load()
+            with load_primary_image(self.paths[row]) as oriented:
                 source_size = oriented.size
                 thumbnail = oriented.copy()
                 thumbnail.thumbnail((1200, 900), Image.Resampling.LANCZOS)
@@ -738,15 +797,5 @@ class MainWindow(QMainWindow):
 
 
 def run():
-    app = QApplication.instance() or QApplication([])
-    app.setApplicationName('Cropperio')
-    app.setApplicationDisplayName('Cropperio')
-    app.setApplicationVersion(__version__)
-    app.setOrganizationName('papagori')
-    icon_path = resource_path('assets/cropperio.ico')
-    if icon_path.is_file():
-        app.setWindowIcon(QIcon(str(icon_path)))
-    app.setStyle('Fusion')
-    window = MainWindow()
-    window.show()
-    return app.exec()
+    from .startup import run as launch
+    return launch()

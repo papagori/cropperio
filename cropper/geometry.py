@@ -1,5 +1,5 @@
 """Crop geometry and direct output sizing, independent of Pillow and Qt."""
-from .settings import ProcessingOptions
+from .settings import ProcessingOptions, custom_output
 
 
 def crop_box(width, height, ratio=(4, 3)):
@@ -31,7 +31,16 @@ def crop_box(width, height, ratio=(4, 3)):
 def output_size(cropped_size, options: ProcessingOptions, *, portrait=False):
     width, height = cropped_size
     preset = options.output
-    if preset.dimensions:
+    if preset.key == 'custom':
+        custom_output(preset.reference_dimension, preset.value)
+        a, b = options.effective_ratio or cropped_size
+        if options.effective_ratio and portrait:
+            a, b = b, a
+        if preset.reference_dimension == 'width':
+            target = preset.value, max(1, round(preset.value * b / a))
+        else:
+            target = max(1, round(preset.value * a / b)), preset.value
+    elif preset.dimensions:
         target = preset.dimensions[::-1] if portrait else preset.dimensions
     elif preset.long_edge:
         edge = preset.long_edge

@@ -127,6 +127,10 @@ _COMMON = '''
 QWidget { font-size: 13px; }
 ToggleSwitch { background: transparent; }
 QLabel#title { font-size: 27px; font-weight: 700; }
+QLabel#tagline { font-size: 15px; font-weight: 600; }
+QSpinBox { min-height: 26px; border-radius: 6px; padding: 6px 24px 6px 10px; }
+QWidget#customControls { background: transparent; }
+QWidget#customControls QComboBox, QWidget#customControls QSpinBox { min-height: 22px; padding-top: 4px; padding-bottom: 4px; }
 QLabel#versionBadge { border-radius: 9px; font-size: 11px; font-weight: 600; padding: 3px 8px; }
 QLabel#sectionTitle { font-size: 15px; font-weight: 600; }
 QLabel#stepLabel { font-size: 11px; font-weight: 700; }
@@ -157,6 +161,8 @@ QLabel#comboArrow { background: transparent; border: none; }
 _DARK = '''
 QWidget { background: #11151b; color: #e7eaf0; font-family: "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", "Meiryo UI", sans-serif; }
 QLabel#title { color: #f8fafc; }
+QSpinBox { background: #1c2938; color: #f8fafc; border: 1px solid #58718e; }
+QSpinBox:focus { border: 2px solid #4d9cff; }
 QLabel#versionBadge { background: #18385d; color: #9dcbff; border: 1px solid #31577f; }
 QLabel#sectionTitle { color: #f1f5f9; }
 QLabel#stepLabel { color: #78c7ff; }
@@ -195,6 +201,8 @@ QLabel#footerLink { color: #7cbcff; }
 _LIGHT = '''
 QWidget { background: #f5f6f8; color: #20242b; font-family: "Segoe UI Variable Text", "Segoe UI", "Yu Gothic UI", "Meiryo UI", sans-serif; }
 QLabel#title { color: #171a1f; }
+QSpinBox { background: #ffffff; color: #151a21; border: 1px solid #8795a8; }
+QSpinBox:focus { border: 2px solid #2878cc; }
 QLabel#versionBadge { background: #e6f1ff; color: #1859a8; border: 1px solid #aacbf2; }
 QLabel#sectionTitle { color: #20242b; }
 QLabel#stepLabel { color: #1769c2; }
@@ -233,6 +241,7 @@ QLabel#footerLink { color: #1769c2; }
 _CLASSIC = '''
 QWidget { background: #c0c0c0; color: #000000; font-family: "Tahoma", "Yu Gothic UI", "Meiryo UI", sans-serif; font-size: 12px; }
 QLabel#title { color: #000080; font-size: 25px; }
+QSpinBox { background: #ffffff; color: #000000; border: 2px inset #ffffff; border-radius: 0px; }
 QLabel#versionBadge { background: #c0c0c0; color: #000000; border: 2px outset #ffffff; border-radius: 0px; }
 QLabel#sectionTitle { color: #000000; }
 QLabel#stepLabel { color: #000080; }

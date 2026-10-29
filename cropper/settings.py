@@ -19,20 +19,38 @@ class OutputPreset:
     label: str
     long_edge: int | None = None
     dimensions: tuple[int, int] | None = None
+    reference_dimension: str | None = None
+    value: int | None = None
 
 
 MAXIMUM = OutputPreset('maximum', 'Maximum Resolution — Keep Maximum Pixels')
 ORIGINAL = OutputPreset('original', 'Original Resolution')
+CUSTOM = OutputPreset('custom', 'Custom…')
+MAX_CUSTOM_DIMENSION = 16000
+
+
+def custom_output(dimension, value):
+    """An immutable custom request captured with the worker's other options."""
+    if dimension not in ('width', 'height'):
+        raise ValueError('Custom dimension must be width or height.')
+    if type(value) is not int or not 1 <= value <= MAX_CUSTOM_DIMENSION:
+        raise ValueError(f'Custom size must be an integer from 1 to {MAX_CUSTOM_DIMENSION}.')
+    return OutputPreset('custom', 'Custom…', reference_dimension=dimension, value=value)
 
 _STANDARD_DIMENSIONS = {
-    '1:1': ((1024, 1024), (2048, 2048), (4096, 4096), (8192, 8192)),
-    '3:2': ((2400, 1600), (3000, 2000), (3600, 2400), (4500, 3000),
+    '1:1': ((512, 512), (1024, 1024), (2048, 2048), (4096, 4096), (8192, 8192)),
+    '3:2': ((600, 400), (900, 600), (1200, 800), (1800, 1200),
+            (2400, 1600), (3000, 2000), (3600, 2400), (4500, 3000),
             (6000, 4000), (7500, 5000)),
-    '4:3': ((2400, 1800), (3200, 2400), (4000, 3000), (4800, 3600),
+    '4:3': ((640, 480), (800, 600), (1200, 900), (1600, 1200), (2000, 1500),
+            (2400, 1800), (3200, 2400), (4000, 3000), (4800, 3600),
             (6000, 4500), (8000, 6000)),
-    '5:4': ((2500, 2000), (3000, 2400), (4000, 3200), (5000, 4000), (6000, 4800)),
-    '16:9': ((1920, 1080), (2560, 1440), (3840, 2160), (5120, 2880), (7680, 4320)),
-    '2:1': ((2000, 1000), (3000, 1500), (4000, 2000), (5000, 2500),
+    '5:4': ((800, 640), (1200, 960), (1600, 1280), (2000, 1600),
+            (2500, 2000), (3000, 2400), (4000, 3200), (5000, 4000), (6000, 4800)),
+    '16:9': ((640, 360), (1280, 720), (1600, 900), (1920, 1080), (2560, 1440),
+             (3840, 2160), (5120, 2880), (7680, 4320)),
+    '2:1': ((800, 400), (1200, 600), (1600, 800), (2000, 1000), (2400, 1200),
+            (3000, 1500), (4000, 2000), (5000, 2500),
             (6000, 3000), (8000, 4000)),
 }
 
@@ -44,11 +62,11 @@ def _exact_preset(width, height):
 OUTPUT_PRESETS = {
     'Original': (ORIGINAL,) + tuple(
         OutputPreset(f'edge_{edge}', f'{edge} px long edge', long_edge=edge)
-        for edge in (2000, 3000, 4000, 5000, 6000, 8000)
-    )
+        for edge in (800, 1200, 1600, 2000, 3000, 4000, 5000, 6000, 8000)
+    ) + (CUSTOM,)
 }
 for _ratio_label, _dimensions in _STANDARD_DIMENSIONS.items():
-    OUTPUT_PRESETS[_ratio_label] = (MAXIMUM,) + tuple(_exact_preset(*size) for size in _dimensions)
+    OUTPUT_PRESETS[_ratio_label] = (MAXIMUM,) + tuple(_exact_preset(*size) for size in _dimensions) + (CUSTOM,)
 
 # Flat views remain useful to non-UI callers. The UI presents only the list
 # belonging to the selected ratio.

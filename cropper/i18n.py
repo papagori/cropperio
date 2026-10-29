@@ -1,11 +1,15 @@
 """Small, dependency-free translation catalog for all application-owned text."""
 import locale
 
+from .input_formats import INPUT_GLOB
+
 
 TRANSLATIONS = {
     'en': {
         'window_title': 'Cropperio — {version}',
         'ratio_original': 'Original',
+        'custom': 'Custom…', 'dimension': 'Dimension:', 'width': 'Width', 'height': 'Height',
+        'custom_value': 'Custom size in pixels', 'custom_limit': '1–{maximum} px for the selected dimension.',
         'subtitle': 'Centered crop • Automatic orientation • High-quality export',
         'language': 'Language:', 'theme': 'Theme:',
         'theme_dark': 'Dark', 'theme_light': 'Light', 'theme_classic': 'Classic',
@@ -41,7 +45,7 @@ TRANSLATIONS = {
         'upscaling_avoided': 'upscaling avoided',
         'add_files': 'Add files…', 'add_folder': 'Add folder…',
         'add_images_dialog': 'Add images', 'add_folder_dialog': 'Add folder',
-        'image_filter': 'Images (*.jpg *.jpeg *.png *.tif *.tiff *.webp);;All files (*)',
+        'image_filter': f'Images ({INPUT_GLOB});;All files (*)',
         'looking': 'Looking for images…', 'item_ready': 'Ready',
         'scan_finished': '{count} images found • {skipped} skipped • {errors} scan errors',
         'queued': 'Queued', 'processing': 'Processing {current} / {total}',
@@ -50,7 +54,6 @@ TRANSLATIONS = {
         'result_log': '{original} → crop {cropped} → {final}{suffix}',
         'finished': 'Finished: {processed} images processed, {skipped} skipped, {errors} errors • {scan_errors} scan errors',
         'wait_close': 'Please wait for the current operation to finish before closing.',
-        'error_multipage': 'Multi-page/animated image is not supported; export a single frame first.',
         'error_high_depth_jpeg': '16/32-bit image: 8-bit JPEG conversion requires a tone mapping choice.',
         'error_not_found': 'Not found: {path}',
         'error_unsupported_format': 'Unsupported output format: {format}',
@@ -58,6 +61,8 @@ TRANSLATIONS = {
     'fr': {
         'window_title': 'Cropperio — {version}',
         'ratio_original': 'Original',
+        'custom': 'Personnalisé…', 'dimension': 'Dimension :', 'width': 'Largeur', 'height': 'Hauteur',
+        'custom_value': 'Taille personnalisée en pixels', 'custom_limit': '1–{maximum} px pour la dimension choisie.',
         'subtitle': 'Recadrage centré • Orientation automatique • Export haute qualité',
         'language': 'Langue :', 'theme': 'Thème :',
         'theme_dark': 'Sombre', 'theme_light': 'Clair', 'theme_classic': 'Classique',
@@ -93,7 +98,7 @@ TRANSLATIONS = {
         'upscaling_avoided': 'agrandissement évité',
         'add_files': 'Ajouter des fichiers…', 'add_folder': 'Ajouter un dossier…',
         'add_images_dialog': 'Ajouter des images', 'add_folder_dialog': 'Ajouter un dossier',
-        'image_filter': 'Images (*.jpg *.jpeg *.png *.tif *.tiff *.webp);;Tous les fichiers (*)',
+        'image_filter': f'Images ({INPUT_GLOB});;Tous les fichiers (*)',
         'looking': "Recherche d'images…", 'item_ready': 'Prêt',
         'scan_finished': '{count} images trouvées • {skipped} ignorées • {errors} erreurs de recherche',
         'queued': 'En attente', 'processing': 'Traitement {current} / {total}',
@@ -102,12 +107,13 @@ TRANSLATIONS = {
         'result_log': '{original} → recadrage {cropped} → {final}{suffix}',
         'finished': 'Terminé : {processed} images traitées, {skipped} ignorées, {errors} erreurs • {scan_errors} erreurs de recherche',
         'wait_close': "Veuillez attendre la fin de l'opération avant de fermer.",
-        'error_multipage': "Les images multipages ou animées ne sont pas prises en charge ; exportez d'abord une seule image.",
         'error_high_depth_jpeg': "Image 16/32 bits : la conversion JPEG 8 bits nécessite un choix de mappage tonal.",
         'error_not_found': 'Introuvable : {path}',
         'error_unsupported_format': 'Format de sortie non pris en charge : {format}',
     },
     'ja': {
+        'custom': 'カスタム…', 'dimension': '基準：', 'width': '幅', 'height': '高さ',
+        'custom_value': 'カスタムサイズ（ピクセル）', 'custom_limit': '選択した辺は 1～{maximum} px。',
         'window_title': 'Cropperio — {version}', 'ratio_original': 'オリジナル',
         'subtitle': '中央クロップ • 自動回転 • 高品質エクスポート',
         'language': '言語：', 'theme': 'テーマ：',
@@ -142,7 +148,7 @@ TRANSLATIONS = {
         'upscaling_avoided': 'アップスケールを回避',
         'add_files': 'ファイルを追加…', 'add_folder': 'フォルダーを追加…',
         'add_images_dialog': '画像を追加', 'add_folder_dialog': 'フォルダーを追加',
-        'image_filter': '画像 (*.jpg *.jpeg *.png *.tif *.tiff *.webp);;すべてのファイル (*)',
+        'image_filter': f'画像 ({INPUT_GLOB});;すべてのファイル (*)',
         'looking': '画像を検索中…', 'item_ready': '準備完了',
         'scan_finished': '{count} 枚の画像 • {skipped} 件をスキップ • 検索エラー {errors} 件',
         'queued': '待機中', 'processing': '処理中 {current} / {total}',
@@ -151,7 +157,6 @@ TRANSLATIONS = {
         'result_log': '{original} → クロップ {cropped} → {final}{suffix}',
         'finished': '完了：{processed} 枚を処理、{skipped} 件をスキップ、エラー {errors} 件 • 検索エラー {scan_errors} 件',
         'wait_close': '現在の処理が完了してから閉じてください。',
-        'error_multipage': '複数ページまたはアニメーション画像には対応していません。1フレームで書き出してください。',
         'error_high_depth_jpeg': '16/32ビット画像を8ビットJPEGに変換するにはトーンマッピングの指定が必要です。',
         'error_not_found': '見つかりません：{path}',
         'error_unsupported_format': '未対応の出力形式です：{format}',

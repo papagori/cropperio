@@ -66,10 +66,12 @@ def _preview(p):
 
 
 def _process(p):
-    p.setPen(QPen(BLACK, 1)); p.setBrush(GREEN)
-    p.drawPolygon(QPolygon([QPoint(1, 6), QPoint(9, 6), QPoint(9, 2), QPoint(15, 8),
-                            QPoint(9, 14), QPoint(9, 10), QPoint(1, 10)]))
-    _rect(p, LIME, 3, 7, 8, 2); _rect(p, WHITE, 10, 5, 1, 1)
+    p.setPen(QPen(BLACK, 4)); p.drawLine(2, 13, 11, 4)
+    p.setPen(QPen(WHITE, 2)); p.drawLine(2, 13, 8, 7)
+    p.setPen(QPen(YELLOW, 2)); p.drawLine(9, 6, 11, 4)
+    for x, y in ((4, 3), (13, 9), (12, 1)):
+        _rect(p, GOLD, x - 1, y, 3, 1)
+        _rect(p, YELLOW, x, max(0, y - 1), 1, 3)
 
 
 def _language(p):

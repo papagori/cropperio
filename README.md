@@ -1,20 +1,26 @@
-# Cropperio
+# Cropperio 2.3.0
 
-Cropperio is a lightweight open-source Windows utility for fast batch cropping and resizing. Choose a ratio, select an output size, preview the crop, and process your images without opening a full photo editor.
+**Drop. Crop. Export. Voilà.**
+
+A lightweight open-source Windows utility for fast batch image cropping and resizing.
+
+Choose a ratio, select an output size, preview the crop, and process your images without opening a full photo editor.
 
 ## Download for Windows
 
-**Existing release:** v2.2.2
+**Recommended release:** Cropperio 2.3.0
 
-- **Release:** [v2.2.2](https://github.com/papagori/cropperio/releases/tag/v2.2.2)
-- **Installer:** [Download PhotoCrop_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.2.2/PhotoCrop_Setup.exe) (filename retained from the existing release)
-- **SHA-256:** `F90DE9AC34909E9BE55DD1053D2E888A340FEC89B60A37A0B2D86F8CB6C740E7`
+- **Release:** [Cropperio 2.3.0](https://github.com/papagori/cropperio/releases/tag/v2.3.0)
+- **Installer:** [Download Cropperio_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.3.0/Cropperio_Setup.exe)
+- **Installer SHA-256:** `273fa4c74a8511c581e0516a30c3dba3f81321d49ab583efdd0b33fe6c2f7ca9`
+- **Standalone:** [Download Cropperio.exe](https://github.com/papagori/cropperio/releases/download/v2.3.0/Cropperio.exe)
+- **Standalone SHA-256:** `4d42aa6687b581a5e02ae6135b2adca3b7eb00436d727fafa9f121a95ddf4a21`
 
-The existing v2.2.2 release remains available under its original asset filenames. New builds use `Cropperio.exe` and `Cropperio_Setup.exe`. The installer is available in **English**, **Français**, and **日本語**.
+Cropperio is the new name of PhotoCrop. The historical [v2.2.2 release](https://github.com/papagori/cropperio/releases/tag/v2.2.2) remains available under its original asset filenames. The installer is available in **English**, **Français**, and **日本語**.
 
 ## For users
 
-The Windows installer includes everything required to run Cropperio. You do **not** need to install Python, PySide6, Pillow, the Microsoft Visual C++ Runtime, PyInstaller, or Inno Setup.
+The Windows installer includes everything required to run Cropperio, including HEIC/HEIF decoding. You do **not** need to install Python, PySide6, Pillow, a Windows HEIF codec, a Microsoft Store extension, libheif, the Microsoft Visual C++ Runtime, PyInstaller, or Inno Setup.
 
 ### Features
 
@@ -44,21 +50,79 @@ The Windows installer includes everything required to run Cropperio. You do **no
 6. Click **Process**.
 7. Find the exported files in `Cropperio_Export` beside the source images.
 
-On first launch, Cropperio starts with **4:3** and **Maximum Resolution** selected. Choosing **Original** disables cropping and offers **Original Resolution** plus 2000, 3000, 4000, 5000, 6000, and 8000 px long-edge choices.
+On first launch, Cropperio starts with **4:3** and **Maximum Resolution** selected. Choosing **Original** disables cropping and offers **Original Resolution** plus 800, 1200, 1600, 2000, 3000, 4000, 5000, 6000, and 8000 px long-edge choices.
 
-For cropped ratios, **Maximum Resolution** keeps the largest centered crop without resizing. Standard presets depend on the selected ratio; for example, 1:1 includes 1024, 2048, 4096, and 8192 px square outputs. If a requested size exceeds the available cropped image, Cropperio keeps the maximum available resolution unless **Allow Upscaling** is enabled.
+For cropped ratios, **Maximum Resolution** keeps the largest centered crop without resizing. Standard presets depend on the selected ratio. If a requested size exceeds the available cropped image, Cropperio keeps the maximum available resolution unless **Allow Upscaling** is enabled.
+
+### Smaller sizes and Custom
+
+All earlier presets remain. These smaller choices are now included, without duplicates:
+
+| Ratio | Added sizes (landscape) |
+| --- | --- |
+| 1:1 | 512 x 512 |
+| 3:2 | 600 x 400, 900 x 600, 1200 x 800, 1800 x 1200 |
+| 4:3 | 640 x 480, 800 x 600, 1200 x 900, 1600 x 1200, 2000 x 1500 |
+| 5:4 | 800 x 640, 1200 x 960, 1600 x 1280, 2000 x 1600 |
+| 16:9 | 640 x 360, 1280 x 720, 1600 x 900 |
+| 2:1 | 800 x 400, 1200 x 600, 1600 x 800, 2400 x 1200 |
+| Original | 800, 1200 and 1600 px long edge |
+
+Select **Custom…** in Output Size to show a compact dimension row. Choose
+**Width** or **Height**, then enter a whole number from **1 to 16000 px**.
+The chosen dimension stays fixed; the other is calculated automatically:
+
+| 4:3 request | Landscape output | Portrait output |
+| --- | --- | --- |
+| Width 1200 | 1200 x 900 | 1200 x 1600 |
+| Height 1200 | 1600 x 1200 | 900 x 1200 |
+
+With **Original**, Custom uses each source image's actual proportions. A mixed
+batch therefore keeps the chosen width or height while calculating the other
+individually. Source/Crop/Output in the preview updates immediately when the
+dimension, value, ratio or selected image changes. Custom uses the same
+single-pass LANCZOS pipeline and no-upscaling rule as normal presets.
+The last Custom dimension and value are remembered; startup still defaults to
+4:3 and Maximum Resolution.
+
+The header and compact startup splash share the same Cropperio identity.
+The splash is shown before image-library/main-window imports and closes as
+soon as the application is ready, without a minimum display duration.
+Process uses a drawn magic wand, with a pixel variant for Classic.
 
 Existing filenames receive `_2`, `_3`, and subsequent suffixes. Current and legacy generated output folders are excluded from input scanning. The optional automatic folder opening occurs once, after a successful batch.
 
-### Supported images
+### Supported input formats
 
-Cropperio accepts JPG/JPEG, PNG, TIFF/TIF, and WEBP source images. It exports JPEG, PNG, and TGA. Animated images and multipage TIFF files are reported as errors.
+- JPEG (`.jpg`, `.jpeg`)
+- PNG (`.png`)
+- TIFF (`.tif`, `.tiff`)
+- WebP (`.webp`)
+- BMP (`.bmp`)
+- HEIC / HEIF (`.heic`, `.heif`)
+- AVIF (`.avif`)
+- GIF (`.gif`)
+- Windows icons (`.ico`, largest embedded representation)
+
+Only one static image is processed: the first frame of GIF, AVIF and other animated inputs, the first page of multipage TIFF, and the primary image of HEIC/HEIF. HEIF depth/auxiliary images and Live Photo motion are not processed. No page or frame selection is needed.
+
+### Output formats
+
+JPEG, PNG and TGA only.
 
 JPEG export uses quality 100, 4:4:4 sampling, and optimization; transparency is composited onto white. PNG is lossless, and PNG/TGA retain source alpha. Compatible ICC profiles, EXIF data, and DPI metadata are retained where the selected output format supports them.
+
+### Not supported
+
+Camera RAW files (including NEF, RAF, CR2/CR3, ARW, DNG, ORF and RW2) and specialized formats such as PSD/PSB, EXR, SVG, PDF and AI are not supported.
 
 ## For developers / Running from source
 
 Python **3.10 or newer** is required only when running or developing Cropperio from source.
+
+The Windows build is validated with Python 3.10.6, Pillow 12.3.0 and
+`pillow-heif==1.8.1` (Python >=3.10, Pillow >=11.1). AVIF uses Pillow's native
+decoder; no additional AVIF plugin is installed.
 
 ```powershell
 git clone https://github.com/papagori/cropperio.git
@@ -77,18 +141,19 @@ $env:QT_QPA_PLATFORM='offscreen'
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-The current Cropperio 2.2.2 release validation includes:
+Cropperio 2.3.0 release validation includes:
 
-- **34 automated tests**.
+- **61 automated tests**, retaining the previous 45 tests and adding Custom sizing, presets, splash, branding and icon coverage.
 - Frozen `Cropperio.exe` validation through its packaged self-test.
+- Normal startup/splash checks in Python, frozen and installed modes.
 - Installer install/run/uninstall validation in an isolated location.
-- Windows Sandbox validation of the public Windows distribution.
+- Real HEIC/HEIF and AVIF processing in the frozen executable and the installed application, using bundled native libraries.
 - JPEG, PNG, and TGA output, including PNG/TGA alpha handling.
 - The three application and installer languages: **English, Français, 日本語**.
 - The three themes: **Dark, Light, Classic**.
 - Crop geometry, dynamic presets, portrait inversion, preview dimensions, EXIF orientation, ICC/metadata handling, no-upscaling behavior, single-pass LANCZOS resizing, drag and drop, background batches, and output-folder behavior.
 
-See [TEST_REPORT.md](TEST_REPORT.md) for the release validation summary.
+See [TEST_REPORT.md](TEST_REPORT.md) for the validation summary and fixture provenance in [tests/fixtures/input_formats/README.md](tests/fixtures/input_formats/README.md).
 
 ### Windows executable and installer builds
 
@@ -99,7 +164,9 @@ Install the development dependencies and run the complete build:
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-The build script generates the shared icon, runs the 34 tests, builds the one-file `dist\Cropperio.exe` binary with PyInstaller, and runs its frozen self-test. If Inno Setup 6 is installed, the script also builds `dist\Cropperio_Setup.exe` from `installer\Cropperio.iss`.
+The build script generates the shared icon, runs the automated suite, builds the one-file `dist\Cropperio.exe` binary with PyInstaller, and runs its frozen self-test, including HEIC/HEIF and AVIF. If Inno Setup 6 is installed, the script also builds `dist\Cropperio_Setup.exe` from `installer\Cropperio.iss`.
+
+PyInstaller bundles the pillow-heif wheel's native DLLs and licenses, plus small self-test inputs. The installed application decodes HEIC directly through libheif/libde265.
 
 To build only the executable with PyInstaller:
 
@@ -110,7 +177,7 @@ To build only the executable with PyInstaller:
 To compile the installer directly with Inno Setup 6 after building the executable:
 
 ```powershell
-ISCC.exe /DAppVersion=2.2.2 installer\Cropperio.iss
+ISCC.exe /DAppVersion=2.3.0 installer\Cropperio.iss
 ```
 
 The installer can be validated with a silent isolated install, frozen application self-test, and uninstall:
@@ -126,11 +193,14 @@ The release version is defined in `cropper/version.py` and reused by the applica
 - `main.py`: application entry point and standalone self-test switch.
 - `cropper/gui.py`: interface, dynamic menus, preview, and worker thread.
 - `cropper/settings.py`: ratio-specific output catalog and processing options.
+- `cropper/startup.py`, `cropper/splash.py`: early branded splash and startup validation.
+- `cropper/branding.py`, `cropper/icons.py`: shared product copy and drawn modern wand.
 - `cropper/geometry.py`: crop and output dimension calculations.
 - `cropper/processing.py`: EXIF orientation, cropping, and single-pass resize pipeline.
 - `cropper/export.py`: JPEG/PNG/TGA color, alpha, metadata, and output handling.
 - `cropper/i18n.py`: English, Français, and 日本語 application text catalogs.
 - `cropper/discovery.py`: input discovery and filtering.
+- `cropper/input_formats.py`: supported input catalog and shared primary-image loader.
 - `cropper/themes.py`: Dark, Light, and Classic theme definitions.
 - `cropper/classic_icons.py`: retro low-color pixel icons used by the Classic theme.
 - `cropper/smoke.py`: frozen executable validation.

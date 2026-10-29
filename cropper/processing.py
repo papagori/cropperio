@@ -2,11 +2,11 @@
 from dataclasses import dataclass
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image
 
 from .export import export_image, pixels_for_resize
 from .geometry import crop_box, output_size
-from .i18n import tr
+from .input_formats import load_primary_image, METADATA_ERRORS
 from .settings import ProcessingOptions
 
 
@@ -24,15 +24,14 @@ class Result:
 def process_image(source, options=ProcessingOptions()):
     source = Path(source)
     try:
-        with Image.open(source) as original:
-            if getattr(original, 'n_frames', 1) > 1:
-                raise ValueError(tr('error_multipage', options.language))
-            image = ImageOps.exif_transpose(original)
-            image.load()
+        with load_primary_image(source) as image:
             before = image.size
             box = crop_box(*before, options.effective_ratio)
-            exif = image.getexif()
-            exif.pop(274, None)
+            try:
+                exif = image.getexif()
+                exif.pop(274, None)
+            except METADATA_ERRORS:
+                exif = Image.Exif()
             cropped = image if box == (0, 0, *before) else image.crop(box)
             final_size, blocked = output_size(cropped.size, options, portrait=before[1] > before[0])
             final = cropped
@@ -53,9 +52,12 @@ def process_image(source, options=ProcessingOptions()):
             for tag, value in ((256, final.width), (257, final.height)):
                 if tag in exif:
                     exif[tag] = value
-            if 34665 in exif:
-                details = exif.get_ifd(34665)
-                details[40962], details[40963] = final.size
+            try:
+                if 34665 in exif:
+                    details = exif.get_ifd(34665)
+                    details[40962], details[40963] = final.size
+            except METADATA_ERRORS:
+                exif.pop(34665, None)
             output = export_image(final, source, exif, options.output_format, options.language)
             return Result(source, output, before, final.size, cropped_size=cropped.size,
                           upscaling_blocked=blocked)

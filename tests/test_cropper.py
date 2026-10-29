@@ -134,11 +134,11 @@ class ImageTests(unittest.TestCase):
             self.assertEqual(result.output.parent, path.parent / OUTPUT_DIR)
             self.assertEqual(result.output.name, 'same.jpg')
 
-    def test_multipage_and_high_bit_depth_report_errors(self):
+    def test_multipage_first_page_and_high_bit_depth_error(self):
         path = self.root / 'pages.tif'
         image = Image.new('RGB', (40, 30))
         image.save(path, save_all=True, append_images=[image])
-        self.assertIn('Multi-page', process_image(path).error)
+        self.assertFalse(process_image(path).error)
         deep = self.make('deep.tif', (40, 30), 'I;16')
         self.assertIn('16/32-bit', process_image(deep).error)
 

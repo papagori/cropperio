@@ -5,6 +5,16 @@ from PyInstaller.utils.win32.versioninfo import (
 )
 
 from cropper.version import __version__
+from importlib.metadata import distribution
+
+
+# The Windows wheel stores libheif/libde265/libx265 beside its Python package.
+# Collect precisely the wheel's native libraries, plus their bundled licenses.
+heif_wheel = distribution('pillow-heif')
+heif_binaries = [(str(heif_wheel.locate_file(path)), '.')
+                 for path in heif_wheel.files if path.suffix.lower() == '.dll']
+heif_licenses = [(str(heif_wheel.locate_file(path)), 'licenses/pillow-heif')
+                for path in heif_wheel.files if 'licenses' in path.parts]
 
 
 version_numbers = tuple(int(part) for part in __version__.split('.')) + (0,)
@@ -39,9 +49,10 @@ version_info = VSVersionInfo(
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
-    datas=[('assets/cropperio.ico', 'assets')],
-    hiddenimports=[],
+    binaries=heif_binaries,
+    datas=[('assets/cropperio.ico', 'assets'),
+           ('tests/fixtures/input_formats', 'validation-inputs')] + heif_licenses,
+    hiddenimports=['_pillow_heif'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

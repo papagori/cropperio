@@ -6,6 +6,7 @@ from PIL import Image, ImageCms
 
 from .discovery import OUTPUT_DIR
 from .i18n import tr
+from .input_formats import METADATA_ERRORS
 
 
 FORMATS = ('JPEG', 'PNG', 'TGA')
@@ -74,13 +75,18 @@ def export_image(image, source: Path, exif, output_format='JPEG', language='en')
     dpi = image.info.get('dpi')
     if output_format == 'JPEG':
         pixels, icc = jpeg_pixels(image, language)
-        options = dict(quality=100, subsampling=0, optimize=True, exif=exif.tobytes())
+        options = dict(quality=100, subsampling=0, optimize=True)
     elif output_format == 'PNG':
         pixels = lossless_pixels(image, output_format)
-        options = dict(compress_level=6, optimize=False, exif=exif.tobytes())
+        options = dict(compress_level=6, optimize=False)
     else:
         pixels = lossless_pixels(image, output_format)
         options = {}
+    if output_format != 'TGA':
+        try:
+            options['exif'] = exif.tobytes()
+        except METADATA_ERRORS:
+            pass
     if output_format != 'TGA' and icc:
         options['icc_profile'] = icc
     if output_format != 'TGA' and dpi:
@@ -88,7 +94,17 @@ def export_image(image, source: Path, exif, output_format='JPEG', language='en')
     output, stream = _exclusive_path(source, EXTENSIONS[output_format])
     try:
         with stream:
-            pixels.save(stream, format=output_format, **options)
+            try:
+                pixels.save(stream, format=output_format, **options)
+            except METADATA_ERRORS:
+                # Retry without metadata before rejecting valid pixel data.
+                if not any(key in options for key in ('exif', 'icc_profile', 'dpi')):
+                    raise
+                for key in ('exif', 'icc_profile', 'dpi'):
+                    options.pop(key, None)
+                stream.seek(0)
+                stream.truncate()
+                pixels.save(stream, format=output_format, **options)
     except BaseException:
         output.unlink(missing_ok=True)
         raise

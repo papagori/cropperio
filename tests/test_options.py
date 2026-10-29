@@ -19,14 +19,19 @@ from cropper.themes import THEMES, ToggleSwitch
 
 
 EXPECTED_SIZES = {
-    '1:1': ((1024, 1024), (2048, 2048), (4096, 4096), (8192, 8192)),
-    '3:2': ((2400, 1600), (3000, 2000), (3600, 2400), (4500, 3000),
+    '1:1': ((512, 512), (1024, 1024), (2048, 2048), (4096, 4096), (8192, 8192)),
+    '3:2': ((600, 400), (900, 600), (1200, 800), (1800, 1200),
+            (2400, 1600), (3000, 2000), (3600, 2400), (4500, 3000),
             (6000, 4000), (7500, 5000)),
-    '4:3': ((2400, 1800), (3200, 2400), (4000, 3000), (4800, 3600),
+    '4:3': ((640, 480), (800, 600), (1200, 900), (1600, 1200), (2000, 1500),
+            (2400, 1800), (3200, 2400), (4000, 3000), (4800, 3600),
             (6000, 4500), (8000, 6000)),
-    '5:4': ((2500, 2000), (3000, 2400), (4000, 3200), (5000, 4000), (6000, 4800)),
-    '16:9': ((1920, 1080), (2560, 1440), (3840, 2160), (5120, 2880), (7680, 4320)),
-    '2:1': ((2000, 1000), (3000, 1500), (4000, 2000), (5000, 2500),
+    '5:4': ((800, 640), (1200, 960), (1600, 1280), (2000, 1600),
+            (2500, 2000), (3000, 2400), (4000, 3200), (5000, 4000), (6000, 4800)),
+    '16:9': ((640, 360), (1280, 720), (1600, 900), (1920, 1080), (2560, 1440),
+             (3840, 2160), (5120, 2880), (7680, 4320)),
+    '2:1': ((800, 400), (1200, 600), (1600, 800), (2000, 1000), (2400, 1200),
+            (3000, 1500), (4000, 2000), (5000, 2500),
             (6000, 3000), (8000, 4000)),
 }
 
@@ -36,12 +41,14 @@ class CatalogAndGeometryTests(unittest.TestCase):
         self.assertEqual(list(ASPECT_RATIOS), ['Original', '1:1', '3:2', '4:3', '5:4', '16:9', '2:1'])
         original = presets_for_ratio('Original')
         self.assertEqual([p.key for p in original],
-                         ['original', 'edge_2000', 'edge_3000', 'edge_4000',
-                          'edge_5000', 'edge_6000', 'edge_8000'])
+                         ['original', 'edge_800', 'edge_1200', 'edge_1600',
+                          'edge_2000', 'edge_3000', 'edge_4000', 'edge_5000',
+                          'edge_6000', 'edge_8000', 'custom'])
         for ratio, dimensions in EXPECTED_SIZES.items():
             presets = presets_for_ratio(ratio)
             self.assertEqual(presets[0].key, 'maximum')
-            self.assertEqual(tuple(p.dimensions for p in presets[1:]), dimensions)
+            self.assertEqual(tuple(p.dimensions for p in presets[1:-1]), dimensions)
+            self.assertEqual(presets[-1].key, 'custom')
             a, b = ASPECT_RATIOS[ratio]
             self.assertTrue(all(width * b == height * a for width, height in dimensions))
 
