@@ -26,7 +26,7 @@ def run(report_path):
               'runtime': {
                   'executable': Path(sys.executable).name,
                   'external_python_required': False,
-                  'icon_bundled': resource_path('assets/photocrop.ico').is_file(),
+                  'icon_bundled': resource_path('assets/cropperio.ico').is_file(),
                   'qt_plugins_available': Path(
                       QLibraryInfo.path(QLibraryInfo.LibraryPath.PluginsPath)).is_dir(),
               }}
@@ -52,10 +52,10 @@ def run(report_path):
 
     try:
         if frozen:
-            assert Path(sys.executable).name.lower() == 'photocropv2.exe'
+            assert Path(sys.executable).name.lower() == 'cropperio.exe'
             assert report['runtime']['icon_bundled']
             assert report['runtime']['qt_plugins_available']
-        with tempfile.TemporaryDirectory(prefix='photo-crop-v2-') as directory:
+        with tempfile.TemporaryDirectory(prefix='cropperio-') as directory:
             root = Path(directory) / 'Été 東京'
             root.mkdir()
             Image.new('RGB', (600, 400), 'steelblue').save(root / 'landscape.jpg')
@@ -71,7 +71,7 @@ def run(report_path):
             report['ui'] = {'languages': ['en', 'fr', 'ja'],
                             'themes': ['dark', 'light', 'classic'],
                             'footer': window.footer_gpl.text(),
-                            'github': 'https://github.com/papagori/photocrop'}
+                            'github': 'https://github.com/papagori/cropperio'}
             window.language_combo.setCurrentIndex(window.language_combo.findData('en'))
             window.theme_combo.setCurrentIndex(window.theme_combo.findData('dark'))
             window.add_paths([root])
@@ -93,7 +93,7 @@ def run(report_path):
                 assert (window.processed, window.errors) == (2, 1)
                 suffix = '' if batch == 1 else f'_{batch}'
                 for name, size in (('landscape', expected), ('portrait', expected[::-1])):
-                    with Image.open(root / 'PhotoCrop_Export' / f'{name}{suffix}.jpg') as result:
+                    with Image.open(root / 'Cropperio_Export' / f'{name}{suffix}.jpg') as result:
                         assert result.size == size, (result.size, size)
                         assert result.format == 'JPEG'
                 report['batches'].append({'preset': key, 'allow_upscaling': upscaling,
@@ -110,7 +110,7 @@ def run(report_path):
                 wait_idle()
                 assert (window.processed, window.errors) == (2, 1)
                 for name, mode in zip(('landscape', 'portrait'), expected_mode):
-                    with Image.open(root / 'PhotoCrop_Export' / f'{name}{extension}') as result:
+                    with Image.open(root / 'Cropperio_Export' / f'{name}{extension}') as result:
                         assert result.size == (1024, 1024)
                         assert result.format == output_format
                         assert result.mode == mode

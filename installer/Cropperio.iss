@@ -1,6 +1,6 @@
-﻿#define AppName "PhotoCropV2"
-#define AppPublisher "PhotoCrop"
-#define AppExeName "PhotoCropV2.exe"
+﻿#define AppName "Cropperio"
+#define AppPublisher "Cropperio"
+#define AppExeName "Cropperio.exe"
 
 #ifndef AppVersion
   #error AppVersion must be supplied by build.ps1 using /DAppVersion=x.y.z
@@ -20,8 +20,8 @@ PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=PhotoCrop_Setup
-SetupIconFile=..\assets\photocrop.ico
+OutputBaseFilename=Cropperio_Setup
+SetupIconFile=..\assets\cropperio.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 LicenseFile=..\LICENSE
 Compression=lzma2/ultra64
@@ -57,7 +57,7 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\PhotoCrop\PhotoCropV2"; ValueType: string; ValueName: "language"; ValueData: "{code:InitialLanguage}"; Flags: createvalueifdoesntexist uninsdeletevalue
+Root: HKCU; Subkey: "Software\papagori\Cropperio"; ValueType: string; ValueName: "language"; ValueData: "{code:InitialLanguage}"; Flags: createvalueifdoesntexist uninsdeletevalue
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchApp}"; Flags: nowait postinstall skipifsilent

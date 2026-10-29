@@ -4,7 +4,7 @@ import locale
 
 TRANSLATIONS = {
     'en': {
-        'window_title': 'PhotoCropV2 — {version}',
+        'window_title': 'Cropperio — {version}',
         'ratio_original': 'Original',
         'subtitle': 'Centered crop • Automatic orientation • High-quality export',
         'language': 'Language:', 'theme': 'Theme:',
@@ -56,7 +56,7 @@ TRANSLATIONS = {
         'error_unsupported_format': 'Unsupported output format: {format}',
     },
     'fr': {
-        'window_title': 'PhotoCropV2 — {version}',
+        'window_title': 'Cropperio — {version}',
         'ratio_original': 'Original',
         'subtitle': 'Recadrage centré • Orientation automatique • Export haute qualité',
         'language': 'Langue :', 'theme': 'Thème :',
@@ -108,7 +108,7 @@ TRANSLATIONS = {
         'error_unsupported_format': 'Format de sortie non pris en charge : {format}',
     },
     'ja': {
-        'window_title': 'PhotoCropV2 — {version}', 'ratio_original': 'オリジナル',
+        'window_title': 'Cropperio — {version}', 'ratio_original': 'オリジナル',
         'subtitle': '中央クロップ • 自動回転 • 高品質エクスポート',
         'language': '言語：', 'theme': 'テーマ：',
         'theme_dark': 'ダーク', 'theme_light': 'ライト', 'theme_classic': 'クラシック',

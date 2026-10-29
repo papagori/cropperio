@@ -1,4 +1,4 @@
-"""Create deterministic UI review captures for every PhotoCrop theme."""
+"""Create deterministic UI review captures for every Cropperio theme."""
 import tempfile
 import time
 from pathlib import Path
@@ -40,7 +40,7 @@ def main():
     app = QApplication.instance() or QApplication([])
     app.setStyle('Fusion')
     variants = (('dark', 'en'), ('light', 'fr'), ('classic', 'ja'))
-    with tempfile.TemporaryDirectory(prefix='photocrop-ui-captures-') as temporary:
+    with tempfile.TemporaryDirectory(prefix='cropperio-ui-captures-') as temporary:
         paths = make_images(Path(temporary))
         for theme, language in variants:
             window = MainWindow(language=language, theme=theme)

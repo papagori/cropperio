@@ -6,10 +6,12 @@ from pathlib import Path
 from .i18n import tr
 
 EXTENSIONS = {'.jpg', '.jpeg', '.png', '.tiff', '.tif', '.webp'}
-OUTPUT_DIR = 'PhotoCrop_Export'
+OUTPUT_DIR = 'Cropperio_Export'
 # Keep legacy export folders out of recursive input discovery. Existing folders
 # are intentionally left untouched; only new exports use OUTPUT_DIR.
-EXCLUDED_OUTPUT_DIRS = frozenset({OUTPUT_DIR.casefold(), '4x3_cropped'.casefold()})
+EXCLUDED_OUTPUT_DIRS = frozenset({
+    OUTPUT_DIR.casefold(), 'photocrop_export', '4x3_cropped',
+})
 
 
 @dataclass

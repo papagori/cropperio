@@ -1,20 +1,20 @@
-# PhotoCrop
+# Cropperio
 
-PhotoCrop is a lightweight open-source Windows utility for fast batch cropping and resizing. Choose a ratio, select an output size, preview the crop, and process your images without opening a full photo editor.
+Cropperio is a lightweight open-source Windows utility for fast batch cropping and resizing. Choose a ratio, select an output size, preview the crop, and process your images without opening a full photo editor.
 
 ## Download for Windows
 
-**Recommended installer:** `PhotoCrop_Setup.exe`
+**Existing release:** v2.2.2
 
-- **Release:** [PhotoCrop 2.2.2](https://github.com/papagori/photocrop/releases/tag/v2.2.2)
-- **Direct installer:** [Download PhotoCrop_Setup.exe](https://github.com/papagori/photocrop/releases/download/v2.2.2/PhotoCrop_Setup.exe)
+- **Release:** [v2.2.2](https://github.com/papagori/cropperio/releases/tag/v2.2.2)
+- **Installer:** [Download PhotoCrop_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.2.2/PhotoCrop_Setup.exe) (filename retained from the existing release)
 - **SHA-256:** `F90DE9AC34909E9BE55DD1053D2E888A340FEC89B60A37A0B2D86F8CB6C740E7`
 
-The installer is the recommended way to use PhotoCrop on Windows. It is available in **English**, **Français**, and **日本語**.
+The existing v2.2.2 release remains available under its original asset filenames. New builds use `Cropperio.exe` and `Cropperio_Setup.exe`. The installer is available in **English**, **Français**, and **日本語**.
 
 ## For users
 
-The Windows installer includes everything required to run PhotoCrop. You do **not** need to install Python, PySide6, Pillow, the Microsoft Visual C++ Runtime, PyInstaller, or Inno Setup.
+The Windows installer includes everything required to run Cropperio. You do **not** need to install Python, PySide6, Pillow, the Microsoft Visual C++ Runtime, PyInstaller, or Inno Setup.
 
 ### Features
 
@@ -29,40 +29,40 @@ The Windows installer includes everything required to run PhotoCrop. You do **no
 - Preserve compatible ICC profiles and relevant metadata where supported.
 - Resize in a single high-quality **LANCZOS** pass.
 - Avoid upscaling by default, with an option to allow it when needed.
-- Save exports beside each source in a `PhotoCrop_Export` folder.
+- Save exports beside each source in a `Cropperio_Export` folder.
 - Optionally open the first output folder automatically after a successful batch.
 - Switch between **Dark, Light, and Classic** themes; Classic uses its own retro low-color pixel icons.
 - Use the application in **English**, **Français**, or **日本語**.
 
 ### Usage
 
-1. Drag image files or a folder into PhotoCrop.
+1. Drag image files or a folder into Cropperio.
 2. Select an aspect ratio.
 3. Keep **Maximum Resolution** or select one of the sizes offered for that ratio.
 4. Select JPEG, PNG, or TGA output.
 5. Check the crop preview and overlay.
 6. Click **Process**.
-7. Find the exported files in `PhotoCrop_Export` beside the source images.
+7. Find the exported files in `Cropperio_Export` beside the source images.
 
-On first launch, PhotoCrop starts with **4:3** and **Maximum Resolution** selected. Choosing **Original** disables cropping and offers **Original Resolution** plus 2000, 3000, 4000, 5000, 6000, and 8000 px long-edge choices.
+On first launch, Cropperio starts with **4:3** and **Maximum Resolution** selected. Choosing **Original** disables cropping and offers **Original Resolution** plus 2000, 3000, 4000, 5000, 6000, and 8000 px long-edge choices.
 
-For cropped ratios, **Maximum Resolution** keeps the largest centered crop without resizing. Standard presets depend on the selected ratio; for example, 1:1 includes 1024, 2048, 4096, and 8192 px square outputs. If a requested size exceeds the available cropped image, PhotoCrop keeps the maximum available resolution unless **Allow Upscaling** is enabled.
+For cropped ratios, **Maximum Resolution** keeps the largest centered crop without resizing. Standard presets depend on the selected ratio; for example, 1:1 includes 1024, 2048, 4096, and 8192 px square outputs. If a requested size exceeds the available cropped image, Cropperio keeps the maximum available resolution unless **Allow Upscaling** is enabled.
 
 Existing filenames receive `_2`, `_3`, and subsequent suffixes. Current and legacy generated output folders are excluded from input scanning. The optional automatic folder opening occurs once, after a successful batch.
 
 ### Supported images
 
-PhotoCrop accepts JPG/JPEG, PNG, TIFF/TIF, and WEBP source images. It exports JPEG, PNG, and TGA. Animated images and multipage TIFF files are reported as errors.
+Cropperio accepts JPG/JPEG, PNG, TIFF/TIF, and WEBP source images. It exports JPEG, PNG, and TGA. Animated images and multipage TIFF files are reported as errors.
 
 JPEG export uses quality 100, 4:4:4 sampling, and optimization; transparency is composited onto white. PNG is lossless, and PNG/TGA retain source alpha. Compatible ICC profiles, EXIF data, and DPI metadata are retained where the selected output format supports them.
 
 ## For developers / Running from source
 
-Python **3.10 or newer** is required only when running or developing PhotoCrop from source.
+Python **3.10 or newer** is required only when running or developing Cropperio from source.
 
 ```powershell
-git clone https://github.com/papagori/photocrop.git
-cd photocrop
+git clone https://github.com/papagori/cropperio.git
+cd cropperio
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe main.py
@@ -77,10 +77,10 @@ $env:QT_QPA_PLATFORM='offscreen'
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-The current PhotoCrop 2.2.2 release validation includes:
+The current Cropperio 2.2.2 release validation includes:
 
 - **34 automated tests**.
-- Frozen `PhotoCropV2.exe` validation through its packaged self-test.
+- Frozen `Cropperio.exe` validation through its packaged self-test.
 - Installer install/run/uninstall validation in an isolated location.
 - Windows Sandbox validation of the public Windows distribution.
 - JPEG, PNG, and TGA output, including PNG/TGA alpha handling.
@@ -99,18 +99,18 @@ Install the development dependencies and run the complete build:
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-The build script generates the shared icon, runs the 34 tests, builds the one-file `dist\PhotoCropV2.exe` binary with PyInstaller, and runs its frozen self-test. If Inno Setup 6 is installed, the script also builds `dist\PhotoCrop_Setup.exe` from `installer\PhotoCropV2.iss`.
+The build script generates the shared icon, runs the 34 tests, builds the one-file `dist\Cropperio.exe` binary with PyInstaller, and runs its frozen self-test. If Inno Setup 6 is installed, the script also builds `dist\Cropperio_Setup.exe` from `installer\Cropperio.iss`.
 
 To build only the executable with PyInstaller:
 
 ```powershell
-.\.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean PhotoCropV2.spec
+.\.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean Cropperio.spec
 ```
 
 To compile the installer directly with Inno Setup 6 after building the executable:
 
 ```powershell
-ISCC.exe /DAppVersion=2.2.2 installer\PhotoCropV2.iss
+ISCC.exe /DAppVersion=2.2.2 installer\Cropperio.iss
 ```
 
 The installer can be validated with a silent isolated install, frozen application self-test, and uninstall:
@@ -135,12 +135,12 @@ The release version is defined in `cropper/version.py` and reused by the applica
 - `cropper/classic_icons.py`: retro low-color pixel icons used by the Classic theme.
 - `cropper/smoke.py`: frozen executable validation.
 - `cropper/version.py`: single application version source.
-- `assets/photocrop.ico`: shared Windows application and installer icon.
-- `PhotoCropV2.spec`: PyInstaller configuration for the current technical binary name.
-- `installer/PhotoCropV2.iss`: Inno Setup installer configuration.
+- `assets/cropperio.ico`: shared Windows application and installer icon.
+- `Cropperio.spec`: PyInstaller configuration for the current technical binary name.
+- `installer/Cropperio.iss`: Inno Setup installer configuration.
 - `tools/test_installer.ps1`: isolated install/run/uninstall distribution test.
 - `tests/`: automated test suite.
 
 ## License
 
-PhotoCrop is licensed under the **GNU General Public License v3.0 only** (`GPL-3.0-only`). See [LICENSE](LICENSE) for the full license text.
+Cropperio is licensed under the **GNU General Public License v3.0 only** (`GPL-3.0-only`). See [LICENSE](LICENSE) for the full license text.

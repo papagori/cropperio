@@ -22,11 +22,13 @@ ENV/
 build/
 dist/
 *.spec
-!PhotoCropV2.spec
+!Cropperio.spec
 *.egg-info/
 .eggs/
 # Generated tests, exports and independent backups
 test-results/
+Cropperio_Export/
+PhotoCrop_Export/
 4x3_cropped/
 backups/
 *.zip

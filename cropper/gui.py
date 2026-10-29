@@ -24,7 +24,7 @@ from .themes import LinkLabel, ThemedComboBox, ToggleSwitch, normalize_theme, th
 from .version import __version__
 
 
-GITHUB_URL = 'https://github.com/papagori/photocrop'
+GITHUB_URL = 'https://github.com/papagori/cropperio'
 
 
 def open_output_folder(path):
@@ -209,7 +209,12 @@ class PreviewPanel(QFrame):
 class MainWindow(QMainWindow):
     def __init__(self, language=None, settings=None, theme=None):
         super().__init__()
-        self.app_settings = settings if settings is not None else QSettings('PhotoCrop', 'PhotoCropV2')
+        self.app_settings = settings if settings is not None else QSettings('papagori', 'Cropperio')
+        if settings is None:
+            previous = QSettings('PhotoCrop', 'PhotoCropV2')
+            for key in ('language', 'theme', 'open_output_folder'):
+                if not self.app_settings.contains(key) and previous.contains(key):
+                    self.app_settings.setValue(key, previous.value(key))
         stored = self.app_settings.value('language', '') if language is None else language
         self.language = normalize_language(stored or system_language())
         stored_theme = self.app_settings.value('theme', 'dark') if theme is None else theme
@@ -219,7 +224,7 @@ class MainWindow(QMainWindow):
         self.skipped = self.processed = self.errors = self.scan_errors = 0
         self.first_output_dir = None
         self.status_key, self.status_values = 'ready', {}
-        icon_path = resource_path('assets/photocrop.ico')
+        icon_path = resource_path('assets/cropperio.ico')
         if icon_path.is_file():
             self.setWindowIcon(QIcon(str(icon_path)))
         self.resize(1120, 850)
@@ -235,7 +240,7 @@ class MainWindow(QMainWindow):
         self.logo = QLabel()
         if icon_path.is_file():
             self.logo.setPixmap(QIcon(str(icon_path)).pixmap(34, 34))
-        title = QLabel('PhotoCrop')
+        title = QLabel('Cropperio')
         title.setObjectName('title')
         version = QLabel(f'v{__version__}')
         version.setObjectName('versionBadge')
@@ -734,11 +739,11 @@ class MainWindow(QMainWindow):
 
 def run():
     app = QApplication.instance() or QApplication([])
-    app.setApplicationName('PhotoCropV2')
-    app.setApplicationDisplayName('PhotoCropV2')
+    app.setApplicationName('Cropperio')
+    app.setApplicationDisplayName('Cropperio')
     app.setApplicationVersion(__version__)
-    app.setOrganizationName('PhotoCrop')
-    icon_path = resource_path('assets/photocrop.ico')
+    app.setOrganizationName('papagori')
+    icon_path = resource_path('assets/cropperio.ico')
     if icon_path.is_file():
         app.setWindowIcon(QIcon(str(icon_path)))
     app.setStyle('Fusion')

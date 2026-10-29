@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 class DistributionConfigurationTests(unittest.TestCase):
     def test_version_and_icon_source(self):
         self.assertRegex(__version__, r'^\d+\.\d+\.\d+$')
-        icon = resource_path('assets/photocrop.ico')
+        icon = resource_path('assets/cropperio.ico')
         self.assertTrue(icon.is_file())
         self.assertGreater(icon.stat().st_size, 1000)
         with Image.open(icon) as image:
@@ -23,14 +23,14 @@ class DistributionConfigurationTests(unittest.TestCase):
             self.assertIn((16, 16), image.ico.sizes())
 
     def test_pyinstaller_spec_embeds_runtime_resources(self):
-        spec = (ROOT / 'PhotoCropV2.spec').read_text(encoding='utf-8')
-        self.assertIn("datas=[('assets/photocrop.ico', 'assets')]", spec)
-        self.assertIn("icon='assets/photocrop.ico'", spec)
+        spec = (ROOT / 'Cropperio.spec').read_text(encoding='utf-8')
+        self.assertIn("datas=[('assets/cropperio.ico', 'assets')]", spec)
+        self.assertIn("icon='assets/cropperio.ico'", spec)
         self.assertIn('version=version_info', spec)
-        self.assertIn("name='PhotoCropV2'", spec)
+        self.assertIn("name='Cropperio'", spec)
 
     def test_inno_setup_installs_only_the_bundled_executable(self):
-        script_path = ROOT / 'installer' / 'PhotoCropV2.iss'
+        script_path = ROOT / 'installer' / 'Cropperio.iss'
         self.assertTrue(script_path.read_bytes().startswith(b'\xef\xbb\xbf'))
         script = script_path.read_text(encoding='utf-8-sig')
         self.assertIn('Source: "..\\dist\\{#AppExeName}"', script)

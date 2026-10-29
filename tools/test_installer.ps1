@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$setupPath = Join-Path $projectRoot 'dist\PhotoCrop_Setup.exe'
-$installTarget = Join-Path $env:TEMP "PhotoCropV2-distribution-test-$PID"
+$setupPath = Join-Path $projectRoot 'dist\Cropperio_Setup.exe'
+$installTarget = Join-Path $env:TEMP "Cropperio-distribution-test-$PID"
 $reportPath = Join-Path $projectRoot 'test-results\installer-smoke.json'
 
 if (-not (Test-Path -LiteralPath $setupPath)) {
@@ -19,7 +19,7 @@ if ($install.ExitCode -ne 0) {
     throw "Installer exited with code $($install.ExitCode)"
 }
 
-$installedExe = Join-Path $installTarget 'PhotoCropV2.exe'
+$installedExe = Join-Path $installTarget 'Cropperio.exe'
 $uninstaller = Join-Path $installTarget 'unins000.exe'
 if (-not (Test-Path -LiteralPath $installedExe) -or
     -not (Test-Path -LiteralPath $uninstaller)) {

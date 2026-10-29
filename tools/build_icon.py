@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw
 
 
 ROOT = Path(__file__).resolve().parent.parent
-OUTPUT = ROOT / 'assets' / 'photocrop.ico'
+OUTPUT = ROOT / 'assets' / 'cropperio.ico'
 
 
 def create_icon(size=256):

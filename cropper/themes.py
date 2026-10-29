@@ -1,4 +1,4 @@
-"""Centralized PhotoCrop theme definitions and reusable themed widgets."""
+"""Centralized Cropperio theme definitions and reusable themed widgets."""
 from PySide6.QtCore import QPoint, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QPolygon
 from PySide6.QtWidgets import QCheckBox, QComboBox, QLabel

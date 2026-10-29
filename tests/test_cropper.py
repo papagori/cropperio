@@ -101,12 +101,16 @@ class ImageTests(unittest.TestCase):
         legacy = self.root / '4x3_cropped'
         legacy.mkdir()
         Image.new('RGB', (40, 30)).save(legacy / 'legacy.jpg')
+        previous_export = self.root / 'PhotoCrop_Export'
+        previous_export.mkdir()
+        Image.new('RGB', (40, 30)).save(previous_export / 'old-export.jpg')
         flat = discover([self.root])
         self.assertEqual(flat.files, [path.resolve()])
         recursive = discover([self.root, path], recursive=True)
         self.assertEqual(len(recursive.files), 2)
         self.assertFalse(any(OUTPUT_DIR in str(p) for p in recursive.files))
         self.assertFalse(any('4x3_cropped' in str(p) for p in recursive.files))
+        self.assertFalse(any('PhotoCrop_Export' in str(p) for p in recursive.files))
         self.assertEqual(discover([self.root], existing=recursive.files).files, [])
 
     def test_corrupt_and_small_images(self):
