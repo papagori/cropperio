@@ -1,3 +1,153 @@
+# Cropperio 2.4.1 — Final release validation
+
+Validation date: 2026-11-17, Windows x64.
+
+- All 120 automated tests passed (23.117 seconds), including existing crop,
+  resize, image format, interactive framing and ratio-override regressions.
+- All 9 localization tests also passed with native Windows Qt rendering
+  (37.788 seconds). All six catalogs have 85/85 keys with matching placeholders:
+  EN, FR, JA, ZH-CN, RU and DE. Language selection/restart persistence, Qt dialog
+  catalogs and all 18 language/theme combinations pass.
+- Source self-test and startup probe passed at version 2.4.1; startup defers image
+  codec imports and closes the splash when the main window is ready.
+- A real Qt mouse activation reached Windows' actual default-browser launcher,
+  which returned success for https://www.matthieutuffet.com/software/.
+  Browser content was not visually inspected by the assistant in this run.
+- Dependency validation (`pip check`) passed.
+- The user confirmed manual installer/application visual QA with no visible
+  layout, translation or glyph issues. The previous Computer Use limitation is
+  explicitly accepted as non-blocking. This is user-provided visual acceptance;
+  see [INSTALLER_VISUAL_QA_2.4.1.md](INSTALLER_VISUAL_QA_2.4.1.md).
+- The changes since v2.4.0 are limited to six-language localization, the discreet
+  footer catalog link, supporting layout/font safeguards, packaging, tests and
+  release documentation. Image processing algorithms and dependencies are unchanged.
+- Final binaries are rebuilt after the release commit, using `build.ps1`, and
+  validated through frozen startup/self-tests and `tools/test_installer.ps1`.
+  The exact commit, final build results, file sizes and SHA-256 hashes are recorded
+  with the GitHub Release and its SHA256SUMS.txt asset, avoiding self-referential
+  source hashes in this document. Publication requires those checks to pass.
+- SourceForge upload has no established authenticated workflow in this checkout.
+  Its latest-download redirect was checked and still selected
+  `v2.4.0/Cropperio_Setup.exe` before publication. Manual upload instructions and
+  the same final binaries will be prepared separately; no SourceForge v2.4.1
+  publication is claimed here.
+
+Evidence (generated/ignored): `test-results/release-2.4.1-tests.log`,
+`release-2.4.1-native-localization.log`, `release-2.4.1-source.json`,
+`release-2.4.1-startup-source.json`, `release-2.4.1-browser.json`,
+`release-2.4.1-prebuild.log`, `release-2.4.1-build.log`,
+`release-2.4.1-installer.log`, `compiled-v2.json`, `startup-frozen.json`,
+`installer-smoke.json`, `startup-installed.json`.
+
+The following records are historical. Their former pending/unpublished status
+and review-build hashes are superseded by the final validation and release assets.
+
+---
+
+# Cropperio 2.4.1 — Historical local review validation (2026-11-16)
+
+Validated on Windows x64, 2026-11-16. Unpublished review build.
+
+- 120 automated tests passed (111 existing tests plus 9 focused localization/link tests).
+- The 9 focused tests also passed using native Windows Qt rendering.
+- All six catalogs contain 85/85 keys (100%): EN, FR, JA, zh-CN, ru-RU, de-DE.
+  Format placeholders, empty strings, replacement characters and duplicate literal
+  keys are checked. English fallback and old locale preferences are covered.
+- Language selection, localized controls/tooltips and existing result rows, restart persistence, startup
+  language normalization and Qt standard-dialog catalogs pass for all six languages.
+- Eighteen language/theme layout combinations pass. Every Chinese and Russian
+  application catalog string is shaped using Qt's actual font fallback: no missing
+  glyphs. Native captures were generated for all 18 combinations; Chinese Dark,
+  Russian Light and German Classic were visually reviewed. Chinese and Russian
+  splash captures were also reviewed and are readable.
+- Longer descriptions wrap; the preview panel enforces its layout minimum to
+  prevent overlap. Long output-size labels have complete text in their tooltip
+  and dropdown. The existing window can expand to fit translated controls.
+- The single footer link is beside GitHub, uses the existing accessible LinkLabel,
+  and supports mouse and keyboard activation. Tests assert the exact HTTPS URL,
+  no launch on startup/language switching, false-return and exception handling.
+- A real mouse-activation test using Qt reached the native Windows browser launcher
+  successfully. Firefox's window title changed to “Software and Plugins — Creative
+  Tools by Matthieu Tuffet”. Browser content inspection was denied by Computer Use.
+- PyInstaller executable built successfully; source, frozen and installed startup
+  and processing self-tests passed. Packaged Qt dialog translations load for all
+  five non-English languages. Existing image formats, crop, resize and export
+  checks pass, including bundled HEIC/HEIF and AVIF codecs.
+- Inno Setup installer compiled successfully without translation warnings. The
+  final compile encountered the open review installer's file lock. The same sources
+  compiled successfully into `dist/review-v2.4.1`; after closing the test process,
+  that final installer was copied to the standard `dist/Cropperio_Setup.exe` path.
+- Existing isolated installation/run/uninstallation test passed. Additional silent
+  installs in paths containing Chinese and Cyrillic characters passed for Chinese,
+  Russian and German, with each correct initial registry language and successful
+  installed startup. Prior language preferences were restored after the tests.
+- Static installer-font checks shaped 296 entries each for Chinese, Russian and
+  German, plus their three Cropperio-specific messages each, with no missing glyphs;
+  Microsoft YaHei UI and Segoe UI are installed.
+  These checks do not establish native installer page layout correctness.
+
+## Installer visual review
+
+Pending: Computer Use rejected access to Cropperio_Setup.tmp with
+“Computer Use was not approved to use cropperio_setup.tmp”. Native installer page
+rendering and overflow in Chinese, Russian and German must be visually reviewed
+before release. **v2.4.1 remains unpublished pending this final validation.**
+
+Follow [the manual visual QA checklist](INSTALLER_VISUAL_QA_2.4.1.md), which also
+records the application-identity investigation and official approval-flow retry.
+The temporary child is a separate reported application identity. Its current
+allow-list entry is present, but the latest official launcher attempt exposed no
+targetable installer window. The remaining cause is unconfirmed; the installer
+has not been changed to work around Computer Use restrictions.
+
+## Review artifacts
+
+- `dist/Cropperio.exe`: 56,733,017 bytes, SHA-256
+  `4fc66ee341a5b9e2f34f6e7570e730dd1b0446d2a81f9828400493712c7e40d2`.
+- `dist/Cropperio_Setup.exe`: 58,136,812 bytes, SHA-256
+  `53c67ac8f9e108cf4b4783824809f52ba4cd8594c1a5b2f1c94d55ca4b080ca9`.
+- Both Windows product versions are 2.4.1.
+- Evidence (generated/ignored): `test-results/v2.4.1-build.log`,
+  `v2.4.1-localization-native.log`, `v2.4.1-source-smoke.json`,
+  `v2.4.1-installer-build.log`, `v2.4.1-installer-test.log`,
+  `v2.4.1-installer-languages.json`, `v2.4.1-installer-fonts.json`,
+  `v2.4.1-browser.json`, `compiled-v2.json`, `startup-frozen.json`,
+  `installer-smoke.json`, `startup-installed*.json`, `ui-*.png`, `splash-*.png`.
+
+## Modified files
+
+- `cropper/i18n.py`: six complete catalogs, link/startup/presentation strings,
+  locale aliases and lazy image-filter formatting to retain deferred codec imports.
+- `cropper/gui.py`: language choices, translated Qt dialogs, footer link with safe
+  browser failure handling, description wrapping preview layout constraints and live translation of existing result rows.
+- `cropper/branding.py`, `splash.py`, `startup.py`, `themes.py`: shared translated
+  startup text, six-language startup selection and preferred Chinese UI fonts.
+- `cropper/version.py`: single release version updated to 2.4.1.
+- `cropper/smoke.py`: packaged six-language, link and Qt translation checks.
+- `installer/Cropperio.iss`: six language entries, custom translated messages,
+  Chinese font fallback and installer-to-app preference mapping.
+- `installer/ChineseSimplified.isl`, `ChineseOverrides.isl`, `TRANSLATIONS.md`:
+  pinned official Chinese catalog, font settings and provenance.
+- `installer/JapaneseOverrides.isl`: UTF-8 BOM for explicit Unicode detection;
+  original Japanese font settings unchanged.
+- `tests/test_localization.py`: 9 focused regression tests.
+- `tests/test_options.py`, `test_custom_ui.py`, `test_distribution.py`: updated
+  assertions for six catalogs, localized presentation and installer configuration.
+- `tools/capture_ui.py`: captures all 18 language/theme combinations.
+- `README.md`, `RELEASE_NOTES_2.4.1.md`, `TEST_REPORT.md`: unreleased status,
+  proposed notes, validation evidence and limitations. Published download links
+  remain on v2.4.0.
+
+## Limits
+
+Native Windows file-picker buttons follow Windows display language. Qt fallback
+file dialogs use the application's selected language. External OS/codec diagnostics
+and the original English GPL legal text remain verbatim. Existing log history keeps
+the language in which its entries were generated. A native-speaker editorial review
+is still advisable. Nothing was committed, tagged, pushed or published.
+
+---
+
 # Cropperio 2.4.0 — Interactive Crop validation
 
 Validated on Windows x64, 2026-10-29. Functional acceptance, including physical mouse/touchpad testing, was confirmed by the user before the release freeze. The 2.3.0 report below is retained as historical context. Final binary hashes and exact sizes are recorded in the [2.4.0 release notes](https://github.com/papagori/cropperio/releases/tag/v2.4.0) after rebuilding and validating the release commit.

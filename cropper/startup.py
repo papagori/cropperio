@@ -9,6 +9,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from .branding import TAGLINE, DESCRIPTION
+from .i18n import normalize_language
 from .resources import resource_path
 from .splash import StartupSplash
 from .version import __version__
@@ -18,7 +19,7 @@ def initial_language():
     current = QSettings('papagori', 'Cropperio').value('language', '')
     legacy = QSettings('PhotoCrop', 'PhotoCropV2').value('language', '')
     value = str(current or legacy or QLocale.system().name()).lower()
-    return 'ja' if value.startswith(('ja', 'jp')) else 'fr' if value.startswith('fr') else 'en'
+    return normalize_language(value)
 
 
 def construct_window(splash, factory):

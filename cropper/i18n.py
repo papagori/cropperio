@@ -1,7 +1,10 @@
 """Small, dependency-free translation catalog for all application-owned text."""
 import locale
 
-from .input_formats import INPUT_GLOB
+LANGUAGES = {
+    'en': 'English', 'fr': 'Français', 'ja': '日本語',
+    'zh-CN': '简体中文', 'ru-RU': 'Русский', 'de-DE': 'Deutsch',
+}
 
 
 TRANSLATIONS = {
@@ -49,7 +52,7 @@ TRANSLATIONS = {
         'upscaling_avoided': 'upscaling avoided',
         'add_files': 'Add files…', 'add_folder': 'Add folder…',
         'add_images_dialog': 'Add images', 'add_folder_dialog': 'Add folder',
-        'image_filter': f'Images ({INPUT_GLOB});;All files (*)',
+        'image_filter': 'Images ({patterns});;All files (*)',
         'looking': 'Looking for images…', 'item_ready': 'Ready',
         'scan_finished': '{count} images found • {skipped} skipped • {errors} scan errors',
         'queued': 'Queued', 'processing': 'Processing {current} / {total}',
@@ -106,7 +109,7 @@ TRANSLATIONS = {
         'upscaling_avoided': 'agrandissement évité',
         'add_files': 'Ajouter des fichiers…', 'add_folder': 'Ajouter un dossier…',
         'add_images_dialog': 'Ajouter des images', 'add_folder_dialog': 'Ajouter un dossier',
-        'image_filter': f'Images ({INPUT_GLOB});;Tous les fichiers (*)',
+        'image_filter': 'Images ({patterns});;Tous les fichiers (*)',
         'looking': "Recherche d'images…", 'item_ready': 'Prêt',
         'scan_finished': '{count} images trouvées • {skipped} ignorées • {errors} erreurs de recherche',
         'queued': 'En attente', 'processing': 'Traitement {current} / {total}',
@@ -160,7 +163,7 @@ TRANSLATIONS = {
         'upscaling_avoided': 'アップスケールを回避',
         'add_files': 'ファイルを追加…', 'add_folder': 'フォルダーを追加…',
         'add_images_dialog': '画像を追加', 'add_folder_dialog': 'フォルダーを追加',
-        'image_filter': f'画像 ({INPUT_GLOB});;すべてのファイル (*)',
+        'image_filter': '画像 ({patterns});;すべてのファイル (*)',
         'looking': '画像を検索中…', 'item_ready': '準備完了',
         'scan_finished': '{count} 枚の画像 • {skipped} 件をスキップ • 検索エラー {errors} 件',
         'queued': '待機中', 'processing': '処理中 {current} / {total}',
@@ -176,10 +179,189 @@ TRANSLATIONS = {
 }
 
 
+TRANSLATIONS.update({
+    'zh-CN': {
+        'reset_crop': '重置裁剪',
+        'reset_crop_tip': '保持宽高比，居中并最大化裁剪区域。选择使用批量宽高比可移除单张图片的宽高比设置。',
+        'image_ratio': '图片宽高比：', 'use_batch_ratio': '使用批量宽高比（{ratio}）',
+        'window_title': 'Cropperio — {version}', 'ratio_original': '原始比例',
+        'custom': '自定义…', 'dimension': '尺寸基准：', 'width': '宽度', 'height': '高度',
+        'custom_value': '自定义像素尺寸', 'custom_limit': '所选边的尺寸范围为 1–{maximum} 像素。',
+        'subtitle': '居中裁剪 • 自动调整方向 • 高质量导出',
+        'language': '语言：', 'theme': '主题：',
+        'theme_dark': '深色', 'theme_light': '浅色', 'theme_classic': '经典',
+        'footer_gpl': 'GNU GPL v3.0', 'footer_github': 'GitHub',
+        'add_images_step': '1 • 添加图片', 'drop_accessible': '添加文件或文件夹',
+        'drop_title': '将文件或文件夹拖放到此处', 'drop_hint': '或点击此处添加文件或文件夹',
+        'include_subfolders': '包含子文件夹',
+        'include_subfolders_tip': '适用于之后添加的文件夹。输出文件夹将被排除。',
+        'source_image': '源图片', 'result': '结果', 'selected_files': '已选文件',
+        'preview': '4 • 预览', 'preview_empty': '选择图片以查看预览',
+        'preview_details_empty': '源图片：—\n裁剪：—\n输出：—',
+        'aspect_ratio': '2 • 宽高比', 'aspect_accessible': '宽高比',
+        'output_size': '3 • 输出尺寸', 'output_size_accessible': '输出尺寸',
+        'output_format': '输出格式：', 'output_format_accessible': '输出格式',
+        'allow_upscaling': '允许放大', 'allow_upscaling_tip': '允许放大至超出裁剪后图片分辨率的尺寸。',
+        'open_output': '完成后打开输出文件夹',
+        'open_output_tip': '批量处理成功后，仅打开一次首个输出文件夹。',
+        'clear': '清空', 'process': '开始处理', 'ready': '就绪',
+        'log_placeholder': '输出路径和错误详情将显示在此处。',
+        'maximum': '最高分辨率 — 保留最多像素', 'original': '原始分辨率',
+        'long_edge': '长边 {edge} 像素', 'portrait_size': '{height} × {width}',
+        'upscaling_allowed': '允许放大', 'no_upscaling': '不放大',
+        'format_quality_JPEG': 'JPEG 最高质量', 'format_quality_PNG': 'PNG 无损',
+        'format_quality_TGA': 'TGA RGB/RGBA', 'portrait_tip': '纵向图片将自动交换宽高。',
+        'preview_unavailable': '无法预览\n{error}', 'source': '源图片', 'crop': '裁剪', 'output': '输出',
+        'upscaling_avoided': '已避免放大', 'add_files': '添加文件…', 'add_folder': '添加文件夹…',
+        'add_images_dialog': '添加图片', 'add_folder_dialog': '添加文件夹',
+        'image_filter': '图片 ({patterns});;所有文件 (*)',
+        'looking': '正在查找图片…', 'item_ready': '就绪',
+        'scan_finished': '找到 {count} 张图片 • 跳过 {skipped} 项 • 扫描错误 {errors} 项',
+        'queued': '等待处理', 'processing': '正在处理 {current} / {total}',
+        'error': '错误', 'error_log': '错误 — {source}\n{error}',
+        'no_crop': '未裁剪', 'resized': '已调整尺寸',
+        'result_log': '{original} → 裁剪 {cropped} → {final}{suffix}',
+        'finished': '完成：已处理 {processed} 张图片，跳过 {skipped} 项，错误 {errors} 项 • 扫描错误 {scan_errors} 项',
+        'wait_close': '请等待当前操作完成后再关闭。',
+        'error_high_depth_jpeg': '16/32 位图片：转换为 8 位 JPEG 需要选择色调映射方式。',
+        'error_not_found': '未找到：{path}', 'error_unsupported_format': '不支持的输出格式：{format}',
+    },
+    'ru-RU': {
+        'reset_crop': 'Сбросить кадрирование',
+        'reset_crop_tip': 'Центрировать и максимально расширить область, сохранив пропорции. Выберите пропорции пакета, чтобы убрать индивидуальную настройку.',
+        'image_ratio': 'Пропорции снимка:', 'use_batch_ratio': 'Как в пакете ({ratio})',
+        'window_title': 'Cropperio — {version}', 'ratio_original': 'Исходные',
+        'custom': 'Задать размер…', 'dimension': 'По стороне:', 'width': 'Ширина', 'height': 'Высота',
+        'custom_value': 'Размер в пикселях', 'custom_limit': 'От 1 до {maximum} пикселей по выбранной стороне.',
+        'subtitle': 'Кадрирование по центру • Автоориентация • Экспорт высокого качества',
+        'language': 'Язык:', 'theme': 'Тема:',
+        'theme_dark': 'Тёмная', 'theme_light': 'Светлая', 'theme_classic': 'Классическая',
+        'footer_gpl': 'GNU GPL v3.0', 'footer_github': 'GitHub',
+        'add_images_step': '1 • ДОБАВЛЕНИЕ ИЗОБРАЖЕНИЙ',
+        'drop_accessible': 'Добавить файлы или папку',
+        'drop_title': 'Перетащите сюда файлы или папку',
+        'drop_hint': 'или нажмите здесь, чтобы добавить файлы или папку',
+        'include_subfolders': 'Включать вложенные папки',
+        'include_subfolders_tip': 'Для папок, добавленных после включения. Папки с результатами исключаются.',
+        'source_image': 'Исходное изображение', 'result': 'Результат', 'selected_files': 'Выбранные файлы',
+        'preview': '4 • Предпросмотр', 'preview_empty': 'Выберите изображение для предпросмотра',
+        'preview_details_empty': 'Источник: —\nКадр: —\nРезультат: —',
+        'aspect_ratio': '2 • Пропорции', 'aspect_accessible': 'Соотношение сторон',
+        'output_size': '3 • Размер результата', 'output_size_accessible': 'Размер результата',
+        'output_format': 'Формат результата:', 'output_format_accessible': 'Формат результата',
+        'allow_upscaling': 'Разрешить увеличение',
+        'allow_upscaling_tip': 'Разрешить увеличение сверх разрешения кадрированного изображения.',
+        'open_output': 'Открыть папку после обработки',
+        'open_output_tip': 'Однократно открыть первую папку с результатами после успешной обработки пакета.',
+        'clear': 'Очистить', 'process': 'Обработать', 'ready': 'Готово',
+        'log_placeholder': 'Здесь появятся пути к результатам и сведения об ошибках.',
+        'maximum': 'Максимальное разрешение — Все пиксели', 'original': 'Исходное разрешение',
+        'long_edge': '{edge} пикс. по длинной стороне', 'portrait_size': '{height} × {width}',
+        'upscaling_allowed': 'Увеличение разрешено', 'no_upscaling': 'Без увеличения',
+        'format_quality_JPEG': 'JPEG, максимальное качество', 'format_quality_PNG': 'PNG без потерь',
+        'format_quality_TGA': 'TGA RGB/RGBA', 'portrait_tip': 'Для вертикальных изображений ширина и высота меняются местами.',
+        'preview_unavailable': 'Предпросмотр недоступен\n{error}',
+        'source': 'Источник', 'crop': 'Кадр', 'output': 'Результат', 'upscaling_avoided': 'без увеличения',
+        'add_files': 'Добавить файлы…', 'add_folder': 'Добавить папку…',
+        'add_images_dialog': 'Добавить изображения', 'add_folder_dialog': 'Добавить папку',
+        'image_filter': 'Изображения ({patterns});;Все файлы (*)',
+        'looking': 'Поиск изображений…', 'item_ready': 'Готово',
+        'scan_finished': 'Найдено: {count} • Пропущено: {skipped} • Ошибок поиска: {errors}',
+        'queued': 'В очереди', 'processing': 'Обработка {current} / {total}',
+        'error': 'Ошибка', 'error_log': 'ОШИБКА — {source}\n{error}',
+        'no_crop': 'без кадрирования', 'resized': 'размер изменён',
+        'result_log': '{original} → кадр {cropped} → {final}{suffix}',
+        'finished': 'Готово: {processed} обработано, {skipped} пропущено, ошибок: {errors} • Ошибок поиска: {scan_errors}',
+        'wait_close': 'Дождитесь завершения текущей операции перед закрытием.',
+        'error_high_depth_jpeg': 'Изображение 16/32 бит: для преобразования в 8-битный JPEG необходимо выбрать тональное отображение.',
+        'error_not_found': 'Не найдено: {path}', 'error_unsupported_format': 'Неподдерживаемый формат результата: {format}',
+    },
+    'de-DE': {
+        'reset_crop': 'Zuschnitt zurücksetzen',
+        'reset_crop_tip': 'Zuschnitt bei gleichem Seitenverhältnis zentrieren und maximieren. Wählen Sie das Stapelverhältnis, um die individuelle Einstellung aufzuheben.',
+        'image_ratio': 'Bildverhältnis:', 'use_batch_ratio': 'Stapelverhältnis ({ratio})',
+        'window_title': 'Cropperio — {version}', 'ratio_original': 'Original',
+        'custom': 'Benutzerdefiniert…', 'dimension': 'Bezugsseite:', 'width': 'Breite', 'height': 'Höhe',
+        'custom_value': 'Eigene Größe in Pixeln', 'custom_limit': '1–{maximum} px für die gewählte Seite.',
+        'subtitle': 'Zentrierter Zuschnitt • Automatische Ausrichtung • Hochwertiger Export',
+        'language': 'Sprache:', 'theme': 'Design:',
+        'theme_dark': 'Dunkel', 'theme_light': 'Hell', 'theme_classic': 'Klassisch',
+        'footer_gpl': 'GNU GPL v3.0', 'footer_github': 'GitHub',
+        'add_images_step': '1 • BILDER HINZUFÜGEN', 'drop_accessible': 'Dateien oder Ordner hinzufügen',
+        'drop_title': 'Dateien oder Ordner hier ablegen',
+        'drop_hint': 'oder hier klicken, um Dateien oder Ordner hinzuzufügen',
+        'include_subfolders': 'Unterordner einbeziehen',
+        'include_subfolders_tip': 'Gilt für danach hinzugefügte Ordner. Ausgabeordner werden ausgeschlossen.',
+        'source_image': 'Quellbild', 'result': 'Ergebnis', 'selected_files': 'Ausgewählte Dateien',
+        'preview': '4 • Vorschau', 'preview_empty': 'Bild für die Vorschau auswählen',
+        'preview_details_empty': 'Quelle: —\nZuschnitt: —\nAusgabe: —',
+        'aspect_ratio': '2 • Seitenverhältnis', 'aspect_accessible': 'Seitenverhältnis',
+        'output_size': '3 • Ausgabegröße', 'output_size_accessible': 'Ausgabegröße',
+        'output_format': 'Ausgabeformat:', 'output_format_accessible': 'Ausgabeformat',
+        'allow_upscaling': 'Vergrößern erlauben',
+        'allow_upscaling_tip': 'Vergrößerung über die Auflösung des zugeschnittenen Bildes hinaus erlauben.',
+        'open_output': 'Ausgabeordner nach Abschluss öffnen',
+        'open_output_tip': 'Nach erfolgreicher Stapelverarbeitung den ersten Ausgabeordner einmal öffnen.',
+        'clear': 'Leeren', 'process': 'Verarbeiten', 'ready': 'Bereit',
+        'log_placeholder': 'Hier erscheinen Ausgabepfade und Fehlerdetails.',
+        'maximum': 'Maximale Auflösung — Alle Pixel behalten', 'original': 'Originalauflösung',
+        'long_edge': '{edge} px lange Seite', 'portrait_size': '{height} × {width}',
+        'upscaling_allowed': 'Vergrößerung erlaubt', 'no_upscaling': 'Keine Vergrößerung',
+        'format_quality_JPEG': 'JPEG, höchste Qualität', 'format_quality_PNG': 'PNG, verlustfrei',
+        'format_quality_TGA': 'TGA RGB/RGBA', 'portrait_tip': 'Bei Hochformatbildern werden die Maße automatisch vertauscht.',
+        'preview_unavailable': 'Vorschau nicht verfügbar\n{error}',
+        'source': 'Quelle', 'crop': 'Zuschnitt', 'output': 'Ausgabe', 'upscaling_avoided': 'Vergrößerung vermieden',
+        'add_files': 'Dateien hinzufügen…', 'add_folder': 'Ordner hinzufügen…',
+        'add_images_dialog': 'Bilder hinzufügen', 'add_folder_dialog': 'Ordner hinzufügen',
+        'image_filter': 'Bilder ({patterns});;Alle Dateien (*)',
+        'looking': 'Bilder werden gesucht…', 'item_ready': 'Bereit',
+        'scan_finished': '{count} Bilder gefunden • {skipped} übersprungen • {errors} Suchfehler',
+        'queued': 'In Warteschlange', 'processing': 'Verarbeitung {current} / {total}',
+        'error': 'Fehler', 'error_log': 'FEHLER — {source}\n{error}',
+        'no_crop': 'kein Zuschnitt', 'resized': 'Größe geändert',
+        'result_log': '{original} → Zuschnitt {cropped} → {final}{suffix}',
+        'finished': 'Fertig: {processed} Bilder verarbeitet, {skipped} übersprungen, {errors} Fehler • {scan_errors} Suchfehler',
+        'wait_close': 'Bitte warten Sie, bis der aktuelle Vorgang abgeschlossen ist, bevor Sie das Fenster schließen.',
+        'error_high_depth_jpeg': '16/32-Bit-Bild: Für die Umwandlung in 8-Bit-JPEG muss eine Tonwertabbildung gewählt werden.',
+        'error_not_found': 'Nicht gefunden: {path}', 'error_unsupported_format': 'Nicht unterstütztes Ausgabeformat: {format}',
+    },
+})
+
+# Shared by the main window and the lightweight startup splash.
+for _language, _texts in {
+    'en': ('More Software & Updates', 'Starting Cropperio…',
+           'Drop. Crop. Export. Voilà.',
+           'A lightweight open-source Windows utility for fast batch image cropping and resizing.'),
+    'fr': ('Autres logiciels et mises à jour', 'Démarrage de Cropperio…',
+           'Déposez. Recadrez. Exportez. Voilà.',
+           'Un utilitaire Windows libre et léger pour recadrer et redimensionner rapidement vos images par lots.'),
+    'ja': ('その他のソフトウェアと更新情報', 'Cropperio を起動中…',
+           'ドロップ。切り抜き。書き出し。これだけ。',
+           '画像の一括切り抜きとリサイズを手軽に行える、軽量なオープンソースの Windows アプリです。'),
+    'zh-CN': ('更多软件与更新', '正在启动 Cropperio…',
+              '拖放。裁剪。导出。轻松完成。',
+              '轻量级开源 Windows 工具，可快速批量裁剪图片和调整尺寸。'),
+    'ru-RU': ('Другие программы и обновления', 'Запуск Cropperio…',
+              'Добавьте. Обрежьте. Сохраните. Готово.',
+              'Лёгкая программа с открытым исходным кодом для Windows: пакетное кадрирование и изменение размеров изображений.'),
+    'de-DE': ('Weitere Software und Updates', 'Cropperio wird gestartet…',
+              'Ablegen. Zuschneiden. Exportieren. Fertig.',
+              'Ein schlankes Open-Source-Programm für Windows zum schnellen Zuschneiden und Skalieren ganzer Bildstapel.'),
+}.items():
+    TRANSLATIONS[_language].update(zip(('more_software', 'starting', 'tagline', 'description'), _texts))
+
+
 def normalize_language(value):
     value = str(value or '').lower().replace('-', '_')
+    for name, language in (('chinese', 'zh-CN'), ('russian', 'ru-RU'),
+                           ('german', 'de-DE'), ('french', 'fr'), ('japanese', 'ja')):
+        if value.startswith(name):
+            return language
     if value.startswith(('ja', 'jp')):
         return 'ja'
+    for prefix, language in (('zh', 'zh-CN'), ('ru', 'ru-RU'), ('de', 'de-DE')):
+        if value.startswith(prefix):
+            return language
     return 'fr' if value.startswith('fr') else 'en'
 
 
@@ -188,5 +370,9 @@ def system_language():
 
 
 def tr(key, language='en', **values):
+    if key == 'image_filter':
+        # Keep startup translations available before importing image codecs.
+        from .input_formats import INPUT_GLOB
+        values.setdefault('patterns', INPUT_GLOB)
     text = TRANSLATIONS[normalize_language(language)].get(key, TRANSLATIONS['en'][key])
     return text.format(**values)

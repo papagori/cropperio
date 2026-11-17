@@ -1,4 +1,4 @@
-; Japanese-specific font settings layered over Inno Setup's official
+﻿; Japanese-specific font settings layered over Inno Setup's official
 ; Japanese translation. The ordered runtime fallback in Cropperio.iss
 ; mirrors this preferred face for systems without Yu Gothic UI.
 [LangOptions]

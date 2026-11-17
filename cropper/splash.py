@@ -3,14 +3,14 @@ from PySide6.QtCore import QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QIcon, QLinearGradient, QPainter, QPixmap
 from PySide6.QtWidgets import QApplication, QSplashScreen
 
-from .branding import TAGLINE, DESCRIPTION, STARTING
+from .i18n import normalize_language, tr
 from .resources import resource_path
 from .version import __version__
 
 
 class StartupSplash(QSplashScreen):
     def __init__(self, language='en'):
-        self.language = language if language in STARTING else 'en'
+        self.language = normalize_language(language)
         screen = QApplication.primaryScreen()
         dpr = screen.devicePixelRatio() if screen else 1.0
         self.logical_size = (460, 258)
@@ -18,7 +18,7 @@ class StartupSplash(QSplashScreen):
         pixmap.setDevicePixelRatio(dpr)
         pixmap.fill(QColor('#101a2b'))
         super().__init__(pixmap, Qt.WindowType.SplashScreen | Qt.WindowType.FramelessWindowHint)
-        self.setWindowTitle('Cropperio startup')
+        self.setWindowTitle(tr('starting', self.language))
         if screen:
             self.move(screen.availableGeometry().center() - self.rect().center())
 
@@ -40,16 +40,16 @@ class StartupSplash(QSplashScreen):
         painter.drawText(QRectF(102, 23, 330, 58), Qt.AlignmentFlag.AlignVCenter, 'Cropperio')
         painter.setFont(QFont('Segoe UI', 13, QFont.Weight.DemiBold))
         painter.setPen(QColor('#badaff'))
-        painter.drawText(QRectF(33, 98, 394, 30), Qt.AlignmentFlag.AlignVCenter, TAGLINE)
+        painter.drawText(QRectF(33, 98, 394, 30), Qt.AlignmentFlag.AlignVCenter, tr('tagline', self.language))
         painter.setFont(QFont('Segoe UI', 10))
         painter.setPen(QColor('#d2deec'))
-        painter.drawText(QRectF(33, 138, 394, 48), Qt.TextFlag.TextWordWrap, DESCRIPTION)
+        painter.drawText(QRectF(33, 138, 394, 60), Qt.TextFlag.TextWordWrap, tr('description', self.language))
         painter.setFont(QFont('Segoe UI', 9))
         painter.setPen(QColor('#9eb7d1'))
         painter.drawText(QRectF(33, 213, 75, 22), Qt.AlignmentFlag.AlignVCenter, f'v{__version__}')
         painter.drawText(QRectF(115, 213, 312, 22),
                          Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                         STARTING[self.language])
+                         tr('starting', self.language))
         painter.end()
         self.setPixmap(pixmap)
         self.repaint()

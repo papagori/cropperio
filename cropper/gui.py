@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image
 from PIL.ImageQt import ImageQt
-from PySide6.QtCore import QRectF, QSettings, Qt, QThread, QUrl, Signal
+from PySide6.QtCore import QLibraryInfo, QRectF, QSettings, Qt, QThread, QTranslator, QUrl, Signal
 from PySide6.QtGui import QColor, QCursor, QDesktopServices, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
@@ -20,7 +20,7 @@ from .export import FORMATS
 from dataclasses import replace
 from .geometry import (resolve_crop, output_size, crop_adjustment, move_crop,
                        zoom_crop, minimum_scale, ManualCrop, image_options)
-from .i18n import normalize_language, system_language, tr
+from .i18n import LANGUAGES, normalize_language, system_language, tr
 from .input_formats import load_primary_image
 from .processing import process_image
 from .resources import resource_path
@@ -30,6 +30,7 @@ from .version import __version__
 
 
 GITHUB_URL = 'https://github.com/papagori/cropperio'
+SOFTWARE_URL = 'https://www.matthieutuffet.com/software/'
 
 
 def open_output_folder(path):
@@ -253,6 +254,7 @@ class PreviewPanel(QFrame):
         self.setObjectName('previewPanel')
         self.setMinimumWidth(310)
         layout = QVBoxLayout(self)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(6)
         title_row = QHBoxLayout()
@@ -346,9 +348,8 @@ class MainWindow(QMainWindow):
         version.setObjectName('versionBadge')
         self.language_label = QLabel()
         self.language_combo = ThemedComboBox()
-        self.language_combo.addItem('English', 'en')
-        self.language_combo.addItem('Français', 'fr')
-        self.language_combo.addItem('日本語', 'ja')
+        for code, name in LANGUAGES.items():
+            self.language_combo.addItem(name, code)
         self.language_combo.setFixedWidth(150)
         self.language_combo.setCurrentIndex(self.language_combo.findData(self.language))
         self.theme_label = QLabel()
@@ -371,6 +372,7 @@ class MainWindow(QMainWindow):
         self.tagline.setObjectName('tagline')
         layout.addWidget(self.tagline)
         self.subtitle = QLabel(DESCRIPTION)
+        self.subtitle.setWordWrap(True)
         self.subtitle.setObjectName('muted')
         layout.addWidget(self.subtitle)
         self.add_label = QLabel()
@@ -528,8 +530,13 @@ class MainWindow(QMainWindow):
         self.footer_github = LinkLabel()
         self.footer_github.setObjectName('footerLink')
         self.footer_github.clicked.connect(self.open_github)
+        self.footer_software = LinkLabel()
+        self.footer_software.setObjectName('footerLink')
+        self.footer_software.clicked.connect(self.open_software)
         footer_layout.addWidget(self.footer_gpl)
         footer_layout.addStretch()
+        footer_layout.addWidget(self.footer_software)
+        footer_layout.addSpacing(16)
         footer_layout.addWidget(self.footer_github)
         layout.addWidget(self.footer)
 
@@ -607,14 +614,33 @@ class MainWindow(QMainWindow):
     def open_github(self, _link=GITHUB_URL):
         return QDesktopServices.openUrl(QUrl(GITHUB_URL))
 
+    def open_software(self):
+        """Open only on activation; a failed browser launch is harmless."""
+        try:
+            return QDesktopServices.openUrl(QUrl(SOFTWARE_URL))
+        except (OSError, RuntimeError):
+            return False
+
     def retranslate_ui(self):
+        app = QApplication.instance()
+        previous = getattr(app, '_cropperio_translator', None)
+        if previous is not None:
+            app.removeTranslator(previous)
+        translator = QTranslator(app)
+        qt_language = {'zh-CN': 'zh_CN', 'ru-RU': 'ru', 'de-DE': 'de'}.get(self.language, self.language)
+        if translator.load('qtbase_' + qt_language,
+                           QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath)):
+            app.installTranslator(translator)
+        app._cropperio_translator = translator
+        if previous is not None:
+            previous.deleteLater()
         self.setWindowTitle(self.t('window_title', version=__version__))
         self.language_label.setText(self.t('language'))
         self.theme_label.setText(self.t('theme'))
         for index, key in enumerate(('theme_dark', 'theme_light', 'theme_classic')):
             self.theme_combo.setItemText(index, self.t(key))
-        self.tagline.setText(TAGLINE)
-        self.subtitle.setText(DESCRIPTION)
+        self.tagline.setText(self.t('tagline'))
+        self.subtitle.setText(self.t('description'))
         self.custom_label.setText(self.t('dimension'))
         self.custom_dimension.setItemText(0, self.t('width'))
         self.custom_dimension.setItemText(1, self.t('height'))
@@ -626,6 +652,11 @@ class MainWindow(QMainWindow):
         self.recursive.setText(self.t('include_subfolders'))
         self.recursive.setToolTip(self.t('include_subfolders_tip'))
         self.table.setHorizontalHeaderLabels([self.t('source_image'), self.t('result')])
+        for row in range(self.table.rowCount()):
+            item = self.table.item(row, 1)
+            text_data = item.data(Qt.ItemDataRole.UserRole)
+            if text_data is not None:
+                self.set_result_text(item, *text_data)
         self.file_title.setText(self.t('selected_files'))
         self.preview.retranslate(self.language)
         self.aspect_label.setText(self.t('aspect_ratio'))
@@ -644,6 +675,7 @@ class MainWindow(QMainWindow):
         self.log.setPlaceholderText(self.t('log_placeholder'))
         self.footer_gpl.setText(self.t('footer_gpl'))
         self.footer_github.setText(self.t('footer_github'))
+        self.footer_software.setText(self.t('more_software'))
         self.set_status(self.status_key, **self.status_values)
         preset = self.output_size.currentData()
         self.populate_output_sizes(preset.key if preset else None)
@@ -652,6 +684,14 @@ class MainWindow(QMainWindow):
     def set_status(self, key, **values):
         self.status_key, self.status_values = key, values
         self.status.setText(self.t(key, **values))
+
+    def set_result_text(self, item, prefix, keys):
+        """Retain translation keys so existing rows follow language switching."""
+        details = ', '.join(self.t(key) for key in keys)
+        suffix = (' • ' if prefix else '') + details if details else ''
+        item.setData(Qt.ItemDataRole.UserRole, (prefix, tuple(keys)))
+        item.setText(prefix + suffix)
+        return suffix
 
     def current_options(self):
         preset = self.output_size.currentData()
@@ -673,6 +713,7 @@ class MainWindow(QMainWindow):
         ratio_key = list(ASPECT_RATIOS)[self.aspect.currentIndex()]
         for index, preset in enumerate(presets_for_ratio(ratio_key)):
             self.output_size.addItem(self.preset_text(preset, portrait), preset)
+            self.output_size.setItemData(index, self.preset_text(preset, portrait), Qt.ItemDataRole.ToolTipRole)
             if preset.key == preferred_key:
                 selected_index = index
         self.output_size.setCurrentIndex(selected_index)
@@ -687,6 +728,7 @@ class MainWindow(QMainWindow):
         preset = self.output_size.currentData()
         if preset is None:
             return
+        self.output_size.setToolTip(self.output_size.currentText())
         self.aspect.setEnabled(not self.busy)
         self.aspect.setToolTip(self.t('portrait_tip'))
         self.custom_controls.setVisible(preset.key == 'custom')
@@ -876,7 +918,9 @@ class MainWindow(QMainWindow):
             item = QTableWidgetItem(str(path))
             item.setToolTip(str(path))
             self.table.setItem(row, 0, item)
-            self.table.setItem(row, 1, QTableWidgetItem(self.t('item_ready')))
+            result_item = QTableWidgetItem()
+            self.set_result_text(result_item, '', ('item_ready',))
+            self.table.setItem(row, 1, result_item)
             self.paths.append(path)
             if self.table.currentRow() < 0:
                 self.table.selectRow(row)
@@ -921,7 +965,7 @@ class MainWindow(QMainWindow):
         self.progress.setRange(0, len(self.paths))
         self.progress.setValue(0)
         for row in range(len(self.paths)):
-            self.table.item(row, 1).setText(self.t('queued'))
+            self.set_result_text(self.table.item(row, 1), '', ('queued',))
         self.log.appendPlainText(self.summary.text())
         self.worker = Worker(list(self.paths), parent=self, options=self.current_options(), crops=self.manual_crops)
         self.worker.progress.connect(self.on_progress)
@@ -936,7 +980,7 @@ class MainWindow(QMainWindow):
         item = self.table.item(row, 1)
         if result.error:
             self.errors += 1
-            item.setText(self.t('error'))
+            self.set_result_text(item, '', ('error',))
             item.setForeground(QColor('#fca5a5'))
             item.setToolTip(result.error)
             self.log.appendPlainText(self.t('error_log', source=result.source, error=result.error))
@@ -946,13 +990,12 @@ class MainWindow(QMainWindow):
                 self.first_output_dir = result.output.parent
             details = []
             if result.original_size == result.cropped_size:
-                details.append(self.t('no_crop'))
+                details.append('no_crop')
             if result.cropped_size != result.size:
-                details.append(self.t('resized'))
+                details.append('resized')
             if result.upscaling_blocked:
-                details.append(self.t('upscaling_avoided'))
-            suffix = ' • ' + ', '.join(details) if details else ''
-            item.setText(f'{result.size[0]} × {result.size[1]}{suffix}')
+                details.append('upscaling_avoided')
+            suffix = self.set_result_text(item, f'{result.size[0]} × {result.size[1]}', details)
             item.setForeground(QColor('#86efac'))
             item.setToolTip(str(result.output))
             self.log.appendPlainText(str(result.output))

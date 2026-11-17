@@ -2,8 +2,6 @@
 
 TAGLINE = 'Drop. Crop. Export. Voilà.'
 DESCRIPTION = 'A lightweight open-source Windows utility for fast batch image cropping and resizing.'
-STARTING = {
-    'en': 'Starting Cropperio…',
-    'fr': 'Démarrage de Cropperio…',
-    'ja': 'Cropperio を起動中…',
-}
+from .i18n import LANGUAGES, tr
+
+STARTING = {language: tr('starting', language) for language in LANGUAGES}

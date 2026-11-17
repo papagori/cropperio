@@ -267,9 +267,9 @@ class SettingsGuiTests(unittest.TestCase):
         self.assertEqual(restored.language, 'fr')
 
     def test_all_translation_catalogs_match_and_japanese_is_applied(self):
-        self.assertEqual(set(TRANSLATIONS), {'en', 'fr', 'ja'})
-        self.assertEqual(set(TRANSLATIONS['en']), set(TRANSLATIONS['fr']))
-        self.assertEqual(set(TRANSLATIONS['en']), set(TRANSLATIONS['ja']))
+        self.assertEqual(set(TRANSLATIONS), {'en', 'fr', 'ja', 'zh-CN', 'ru-RU', 'de-DE'})
+        for catalog in TRANSLATIONS.values():
+            self.assertEqual(set(TRANSLATIONS['en']), set(catalog))
         window = MainWindow(language='ja', theme='dark')
         self.addCleanup(window.close)
         self.assertEqual(window.process.text(), '処理開始')

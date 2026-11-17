@@ -17,6 +17,7 @@ from PySide6.QtWidgets import QApplication
 from .branding import TAGLINE, DESCRIPTION
 
 from .gui import MainWindow
+from .i18n import TRANSLATIONS, tr
 from .discovery import OUTPUT_DIR
 from .input_formats import EXTENSIONS
 from .input_formats import load_primary_image
@@ -79,13 +80,20 @@ def run(report_path):
             Image.new('RGBA', (400, 600), (255, 128, 30, 128)).save(root / 'portrait.png')
             (root / 'broken.jpg').write_bytes(b'intentionally corrupt test image')
             window.show()
-            for language, expected in (('en', 'Process'), ('fr', 'Traiter'), ('ja', '処理開始')):
+            for language, expected in (('en', 'Process'), ('fr', 'Traiter'), ('ja', '処理開始'),
+                                       ('zh-CN', '开始处理'), ('ru-RU', 'Обработать'), ('de-DE', 'Verarbeiten')):
                 window.language_combo.setCurrentIndex(window.language_combo.findData(language))
                 assert window.process.text() == expected
+                assert window.footer_software.text() == tr('more_software', language)
+                if language != 'en':
+                    assert not app._cropperio_translator.isEmpty(), language
             for theme in ('dark', 'light', 'classic'):
                 window.theme_combo.setCurrentIndex(window.theme_combo.findData(theme))
                 assert window.theme == theme and window.styleSheet()
-            report['ui'] = {'languages': ['en', 'fr', 'ja'],
+            window.language_combo.setCurrentIndex(window.language_combo.findData('en'))
+            report['ui'] = {'languages': ['en', 'fr', 'ja', 'zh-CN', 'ru-RU', 'de-DE'],
+                            'translation_coverage': {key: len(value) for key, value in TRANSLATIONS.items()},
+                            'qt_dialog_translations': True,
                             'themes': ['dark', 'light', 'classic'],
                             'footer': window.footer_gpl.text(),
                             'github': 'https://github.com/papagori/cropperio',

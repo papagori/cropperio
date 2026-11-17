@@ -1,6 +1,8 @@
-# Cropperio 2.4.0 — Interactive Crop
+# Cropperio 2.4.1 — Six Languages & Software Link
 
 **Drop. Crop. Export. Voilà.**
+
+Version **2.4.1** is the stable release. See [RELEASE_NOTES_2.4.1.md](RELEASE_NOTES_2.4.1.md).
 
 A lightweight open-source Windows utility for fast batch image cropping and resizing.
 
@@ -8,16 +10,16 @@ Choose a ratio, select an output size, preview the crop, and process your images
 
 ## Download for Windows
 
-**Recommended release:** Cropperio 2.4.0
+**Recommended release:** Cropperio 2.4.1
 
-- **Release:** [Cropperio 2.4.0](https://github.com/papagori/cropperio/releases/tag/v2.4.0)
-- **Installer:** [Download Cropperio_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.4.0/Cropperio_Setup.exe)
-- **Standalone:** [Download Cropperio.exe](https://github.com/papagori/cropperio/releases/download/v2.4.0/Cropperio.exe)
-- **SHA-256 and exact file sizes:** see the [2.4.0 release notes](https://github.com/papagori/cropperio/releases/tag/v2.4.0), calculated from the final binaries built from the tagged commit.
+- **Release:** [Cropperio 2.4.1](https://github.com/papagori/cropperio/releases/tag/v2.4.1)
+- **Installer:** [Download Cropperio_Setup.exe](https://github.com/papagori/cropperio/releases/download/v2.4.1/Cropperio_Setup.exe)
+- **Standalone:** [Download Cropperio.exe](https://github.com/papagori/cropperio/releases/download/v2.4.1/Cropperio.exe)
+- **SHA-256 and exact file sizes:** see the [2.4.1 release notes](https://github.com/papagori/cropperio/releases/tag/v2.4.1), calculated from the final binaries built from the tagged commit.
 
-The previous [2.3.0 release](https://github.com/papagori/cropperio/releases/tag/v2.3.0) remains available.
+The previous [2.4.0 release](https://github.com/papagori/cropperio/releases/tag/v2.4.0) remains available.
 
-Cropperio is the new name of PhotoCrop. The historical [v2.2.2 release](https://github.com/papagori/cropperio/releases/tag/v2.2.2) remains available under its original asset filenames. The installer is available in **English**, **Français**, and **日本語**.
+Cropperio is the new name of PhotoCrop. The historical [v2.2.2 release](https://github.com/papagori/cropperio/releases/tag/v2.2.2) remains available under its original asset filenames. The installer is available in **English**, **Français**, **日本語**, **简体中文**, **Русский**, and **Deutsch**.
 
 ## For users
 
@@ -41,7 +43,10 @@ The Windows installer includes everything required to run Cropperio, including H
 - Save exports beside each source in a `Cropperio_Export` folder.
 - Optionally open the first output folder automatically after a successful batch.
 - Switch between **Dark, Light, and Classic** themes; Classic uses its own retro low-color pixel icons.
-- Use the application in **English**, **Français**, or **日本語**.
+- Use the application and installer in **English**, **Français**, **日本語**,
+  **简体中文**, **Русский**, or **Deutsch**. Language selection is remembered.
+- Discover the developer's software catalog through **More Software & Updates**
+  in the existing footer beside GitHub. It opens the default browser only when activated.
 
 ### Usage
 
@@ -63,7 +68,7 @@ Every image starts with the same automatic centered crop as before. Optional adj
 
 - **Left drag inside the crop:** move within the source boundaries, with open/closed hand cursors. The dark outer area does not start a drag.
 - **Wheel up/down:** shrink/grow the crop by about 4% per notch, retaining the ratio. Fractional wheel and touchpad pixel deltas are supported.
-- **Reset crop:** return only the selected image to automatic framing, keeping its individual ratio if present. EN/FR/JA labels are available.
+- **Reset crop:** return only the selected image to automatic framing, keeping its individual ratio if present. Labels are available in all six languages.
 
 The maximum is the existing largest crop. Without upscaling, standard and Custom output dimensions set the minimum; if the source is already too small, the full available crop and existing no-upscaling behavior apply. With upscaling, or Maximum/Original Resolution, the safety minimum is 16 source pixels on the short edge (or the source size for smaller images). Ratios use nearest-pixel rounding, including the historical rounding at maximum size.
 
@@ -172,15 +177,16 @@ $env:QT_QPA_PLATFORM='offscreen'
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Cropperio 2.4.0 local validation includes:
+Cropperio 2.4.1 local validation includes:
 
-- **111 automated tests**: all 92 Interactive Crop tests plus 19 ratio-override geometry, UI, independent-state, mixed-batch and output tests. The 19 new tests also pass with native Windows Qt rendering.
+- **120 automated tests**, including catalog/placeholder completeness, Unicode glyphs,
+  language switching and persistence, footer activation and browser-launch failures.
 - Frozen `Cropperio.exe` validation through its packaged self-test.
 - Normal startup/splash checks in Python, frozen and installed modes.
 - Installer install/run/uninstall validation in an isolated location.
 - Real HEIC/HEIF and AVIF processing in the frozen executable and the installed application, using bundled native libraries.
 - JPEG, PNG, and TGA output, including PNG/TGA alpha handling.
-- The three application and installer languages: **English, Français, 日本語**.
+- The six application and installer languages: **English, Français, 日本語, 简体中文, Русский, Deutsch**.
 - The three themes: **Dark, Light, Classic**.
 - Crop geometry, dynamic presets, portrait inversion, preview dimensions, EXIF orientation, ICC/metadata handling, no-upscaling behavior, single-pass LANCZOS resizing, drag and drop, background batches, and output-folder behavior.
 
@@ -208,7 +214,7 @@ To build only the executable with PyInstaller:
 To compile the installer directly with Inno Setup 6 after building the executable:
 
 ```powershell
-ISCC.exe /DAppVersion=2.4.0 installer\Cropperio.iss
+ISCC.exe /DAppVersion=2.4.1 installer\Cropperio.iss
 ```
 
 The installer can be validated with a silent isolated install, frozen application self-test, and uninstall:

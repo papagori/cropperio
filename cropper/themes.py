@@ -280,4 +280,6 @@ def theme_stylesheet(theme_name, language='en'):
     stylesheet = _COMMON + {'dark': _DARK, 'light': _LIGHT, 'classic': _CLASSIC}[theme_name]
     if language == 'ja':
         stylesheet += '\nQWidget { font-family: "Yu Gothic UI", "Meiryo UI", "Segoe UI", sans-serif; }\n'
+    elif language == 'zh-CN':
+        stylesheet += '\nQWidget { font-family: "Microsoft YaHei UI", "Microsoft YaHei", "SimSun", "Segoe UI", sans-serif; }\n'
     return stylesheet

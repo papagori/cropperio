@@ -18,6 +18,7 @@ from cropper.branding import TAGLINE, DESCRIPTION, STARTING
 from cropper.classic_icons import classic_icon
 from cropper.geometry import output_size
 from cropper.gui import MainWindow
+from cropper.i18n import tr
 from cropper.settings import (
     MAXIMUM, MAX_CUSTOM_DIMENSION, OUTPUT_PRESETS, OutputPreset,
     ProcessingOptions, custom_output,
@@ -216,8 +217,8 @@ class CustomGuiTests(unittest.TestCase):
                 window.theme_combo.setCurrentIndex(window.theme_combo.findData(theme))
                 window.aspect.setCurrentIndex(0)
                 self.assertEqual(window.current_options().output, custom_output('height', 640))
-                self.assertEqual(window.tagline.text(), TAGLINE)
-                self.assertEqual(window.subtitle.text(), DESCRIPTION)
+                self.assertEqual(window.tagline.text(), tr('tagline', language))
+                self.assertEqual(window.subtitle.text(), tr('description', language))
         window.close()
         self.window = MainWindow(settings=self.settings)
         self.choose_custom()

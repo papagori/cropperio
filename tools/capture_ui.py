@@ -41,7 +41,7 @@ def main():
     app = QApplication.instance() or QApplication([])
     app.setStyle('Fusion')
     variants = tuple((theme, language) for theme in ('dark', 'light', 'classic')
-                     for language in ('en', 'fr', 'ja'))
+                     for language in ('en', 'fr', 'ja', 'zh-CN', 'ru-RU', 'de-DE'))
     with tempfile.TemporaryDirectory(prefix='cropperio-ui-captures-') as temporary:
         paths = make_images(Path(temporary))
         for theme, language in variants:

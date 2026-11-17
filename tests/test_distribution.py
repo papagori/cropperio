@@ -41,6 +41,19 @@ class DistributionConfigurationTests(unittest.TestCase):
         self.assertIn('Tasks: desktopicon', script)
         self.assertIn('Name: "french"', script)
         self.assertIn('Name: "japanese"', script)
+        for language, preference in (('chinesesimplified', 'zh-CN'), ('russian', 'ru-RU'), ('german', 'de-DE')):
+            self.assertIn(f'Name: "{language}"', script)
+            for key in ('DesktopShortcut', 'AdditionalShortcuts', 'LaunchApp'):
+                self.assertIn(f'{language}.{key}=', script)
+            self.assertIn(f"Result := '{preference}'", script)
+        self.assertIn("FontExists('Microsoft YaHei UI')", script)
+        chinese = (ROOT / 'installer/ChineseSimplified.isl').read_text(encoding='utf-8-sig')
+        self.assertIn('LanguageName=简体中文', chinese)
+        self.assertIn('LanguageID=$0804', chinese)
+        self.assertIn('ButtonCancel=取消', chinese)
+        for path in (ROOT / 'installer').glob('*.isl'):
+            self.assertTrue(path.read_bytes().startswith(b'\xef\xbb\xbf'), path.name)
+            self.assertNotIn('\ufffd', path.read_text(encoding='utf-8-sig'))
         self.assertIn('JapaneseOverrides.isl', script)
         self.assertIn("FontExists('Yu Gothic UI')", script)
         self.assertIn('japanese.DesktopShortcut=\u30c7\u30b9\u30af\u30c8\u30c3\u30d7\u306b\u30b7\u30e7\u30fc\u30c8\u30ab\u30c3\u30c8\u3092\u4f5c\u6210\u3059\u308b', script)
