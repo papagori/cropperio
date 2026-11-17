@@ -30,13 +30,14 @@ class DistributionConfigurationTests(unittest.TestCase):
         self.assertIn("('tests/fixtures/input_formats', 'validation-inputs')", spec)
         self.assertIn("icon='assets/cropperio.ico'", spec)
         self.assertIn('version=version_info', spec)
-        self.assertIn("name='Cropperio'", spec)
+        self.assertIn("name=release_names['standalone_base']", spec)
 
     def test_inno_setup_installs_only_the_bundled_executable(self):
         script_path = ROOT / 'installer' / 'Cropperio.iss'
         self.assertTrue(script_path.read_bytes().startswith(b'\xef\xbb\xbf'))
         script = script_path.read_text(encoding='utf-8-sig')
-        self.assertIn('Source: "..\\dist\\{#AppExeName}"', script)
+        self.assertIn('Source: "..\\dist\\{#StandaloneFileName}"', script)
+        self.assertIn('DestName: "{#AppExeName}"', script)
         self.assertIn('UninstallDisplayIcon={app}\\{#AppExeName}', script)
         self.assertIn('Tasks: desktopicon', script)
         self.assertIn('Name: "french"', script)

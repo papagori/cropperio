@@ -5,6 +5,7 @@ from PyInstaller.utils.win32.versioninfo import (
 )
 
 from cropper.version import __version__
+from cropper.release_artifacts import artifact_names
 from importlib.metadata import distribution
 
 
@@ -17,7 +18,8 @@ heif_licenses = [(str(heif_wheel.locate_file(path)), 'licenses/pillow-heif')
                 for path in heif_wheel.files if 'licenses' in path.parts]
 
 
-version_numbers = tuple(int(part) for part in __version__.split('.')) + (0,)
+release_names = artifact_names()
+version_numbers = tuple(release_names['windows_version'])
 version_info = VSVersionInfo(
     ffi=FixedFileInfo(
         filevers=version_numbers,
@@ -37,7 +39,7 @@ version_info = VSVersionInfo(
                 StringStruct('FileVersion', __version__),
                 StringStruct('InternalName', 'Cropperio'),
                 StringStruct('LegalCopyright', 'GNU General Public License v3.0'),
-                StringStruct('OriginalFilename', 'Cropperio.exe'),
+                StringStruct('OriginalFilename', release_names['standalone']),
                 StringStruct('ProductName', 'Cropperio'),
                 StringStruct('ProductVersion', __version__),
             ]),
@@ -68,7 +70,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='Cropperio',
+    name=release_names['standalone_base'],
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

@@ -5,6 +5,12 @@
 #ifndef AppVersion
   #error AppVersion must be supplied by build.ps1 using /DAppVersion=x.y.z
 #endif
+#ifndef StandaloneFileName
+  #error StandaloneFileName must be supplied from cropper.release_artifacts
+#endif
+#ifndef SetupBaseName
+  #error SetupBaseName must be supplied from cropper.release_artifacts
+#endif
 
 [Setup]
 AppId={{76F69A08-DC5C-43EE-A5CD-3130BBF7EF5C}
@@ -20,7 +26,7 @@ PrivilegesRequiredOverridesAllowed=dialog
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Cropperio_Setup
+OutputBaseFilename={#SetupBaseName}
 SetupIconFile=..\assets\cropperio.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 LicenseFile=..\LICENSE
@@ -62,7 +68,7 @@ german.LaunchApp={#AppName} starten
 Name: "desktopicon"; Description: "{cm:DesktopShortcut}"; GroupDescription: "{cm:AdditionalShortcuts}"; Flags: unchecked
 
 [Files]
-Source: "..\dist\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\{#StandaloneFileName}"; DestDir: "{app}"; DestName: "{#AppExeName}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"

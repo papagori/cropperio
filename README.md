@@ -201,7 +201,9 @@ Install the development dependencies and run the complete build:
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-The build script generates the shared icon, runs the automated suite, builds the one-file `dist\Cropperio.exe` binary with PyInstaller, and runs its frozen self-test, including HEIC/HEIF and AVIF. If Inno Setup 6 is installed, the script also builds `dist\Cropperio_Setup.exe` from `installer\Cropperio.iss`.
+The build script generates the shared icon, runs the automated suite, builds the one-file standalone binary with PyInstaller, and runs its frozen self-test, including HEIC/HEIF and AVIF. If Inno Setup 6 is installed, it also builds the installer and generates SHA-256 checksums and build metadata.
+
+**Permanent convention from v2.4.2:** `dist\Cropperio_v2_4_2.exe` and `dist\Cropperio_Setup_v2_4_2.exe`. Both names are generated automatically from `cropper/version.py`; the installed application remains `Cropperio.exe`. Published v2.4.1 and older assets keep their original names and URLs. See [RELEASING.md](RELEASING.md) for naming, validation, GitHub assets and the required SourceForge Windows-default verification. `powershell -File .\build.ps1 -Plan` previews the current names without building.
 
 PyInstaller bundles the pillow-heif wheel's native DLLs and licenses, plus small self-test inputs. The installed application decodes HEIC directly through libheif/libde265.
 
@@ -214,7 +216,8 @@ To build only the executable with PyInstaller:
 To compile the installer directly with Inno Setup 6 after building the executable:
 
 ```powershell
-ISCC.exe /DAppVersion=2.4.1 installer\Cropperio.iss
+$release = .\.venv\Scripts\python.exe -m cropper.release_artifacts names | ConvertFrom-Json
+ISCC.exe "/DAppVersion=$($release.version)" "/DStandaloneFileName=$($release.standalone)" "/DSetupBaseName=$($release.installer_base)" installer\Cropperio.iss
 ```
 
 The installer can be validated with a silent isolated install, frozen application self-test, and uninstall:

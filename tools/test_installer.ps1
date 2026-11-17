@@ -1,6 +1,14 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$setupPath = Join-Path $projectRoot 'dist\Cropperio_Setup.exe'
+Push-Location -LiteralPath $projectRoot
+try {
+    $releaseJson = & (Join-Path $projectRoot '.venv\Scripts\python.exe') -m cropper.release_artifacts names
+} finally {
+    Pop-Location
+}
+if ($LASTEXITCODE -ne 0) { throw 'Could not resolve distribution names' }
+$release = $releaseJson | ConvertFrom-Json
+$setupPath = Join-Path $projectRoot (Join-Path 'dist' $release.installer)
 $installTarget = Join-Path $env:TEMP "Cropperio-distribution-test-$PID"
 $reportPath = Join-Path $projectRoot 'test-results\installer-smoke.json'
 $setupLog = Join-Path $projectRoot 'test-results\installer-setup.log'
@@ -20,7 +28,7 @@ if ($install.ExitCode -ne 0) {
     throw "Installer exited with code $($install.ExitCode)"
 }
 
-$installedExe = Join-Path $installTarget 'Cropperio.exe'
+$installedExe = Join-Path $installTarget $release.installed
 $uninstaller = Join-Path $installTarget 'unins000.exe'
 if (-not (Test-Path -LiteralPath $installedExe) -or
     -not (Test-Path -LiteralPath $uninstaller)) {
